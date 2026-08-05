@@ -8,7 +8,7 @@
 
 ## Next
 
-- Fill TODO fields in `PRODUCT_SPEC.md` and `ARCHITECTURE.md`.
+- 按 `docs/superpowers/specs/2026-08-05-signal-dashboard-design.md` 编写一期实施计划并动工。
 - Add a one-command verification path if the project does not have one.
 
 ## Blocked
