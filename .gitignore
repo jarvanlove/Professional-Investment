@@ -1,0 +1,10 @@
+node_modules/
+.next/
+__pycache__/
+.pytest_cache/
+.venv/
+*.egg-info/
+services/quant-api/data/
+wiki.context.json
+.obsidiantowiki/
+.superpowers/

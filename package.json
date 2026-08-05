@@ -1,0 +1,13 @@
+{
+  "name": "professional-investment",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently -k -n api,web \"uv run --directory services/quant-api uvicorn app.main:app --reload --port 8000\" \"pnpm --dir apps/web dev\"",
+    "dev:api": "uv run --directory services/quant-api uvicorn app.main:app --reload --port 8000",
+    "dev:web": "pnpm --dir apps/web dev",
+    "test": "uv run --directory packages/quant-core pytest && uv run --directory services/quant-api pytest && pnpm --dir apps/web test"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
