@@ -55,7 +55,7 @@ professional-investment/
 技术选型：
 
 - 前端：Next.js（App Router）+ TypeScript + Tailwind CSS + shadcn/ui；图表用 Recharts
-- 后端：FastAPI + SQLAlchemy 2.x + Alembic + SQLite（文件位于 `services/quant-api/data/investment.db`，不入库 Git）
+- 后端：FastAPI + SQLAlchemy 2.x + SQLite（文件位于 `services/quant-api/data/investment.db`，不入库 Git）；一期用 `create_all`，首次需要改表结构时再引入 Alembic
 - 算法库：Python 3.11+，pandas + numpy
 - 数据源：akshare（天天基金/东方财富公开接口）
 - Monorepo 工具：pnpm workspace（前端）+ uv/pip editable install（Python 包）
@@ -94,7 +94,7 @@ professional-investment/
 
 - `funds` — 基金主档：代码、名称、角色（core/satellite/defensive/cash）、硬上限、默认目标权重、费用规则 JSON、信号代理代码（广发→589210）
 - `nav_history` — 日净值：fund_id, date, nav, source(auto/manual), created_at；唯一约束 (fund_id, date)
-- `trades` — 交易日志：日期、fund_id、方向（buy/sell)、金额、份额、确认净值、理由代码、批次持有天数、费用估计、交易后权重、现金比例、备注（对应 PDF 15.2 模板）
+- `trades` — 账本（唯一事实来源）：日期、fund_id（可空）、direction（buy/sell/**deposit/withdraw**）、金额、份额、确认净值、理由代码、费用估计、备注。现金 = 入金-出金-买入+卖出，净投入 = 入金-出金，均由账本推导；初始持仓以历史买入记录录入
 - `weekly_signals` — 每周信号快照：日期、SignalReport 序列化 JSON；用于复盘"当时系统说了什么"
 - `account_state` — 账户状态流水：日期、总资产、净投入本金、组合峰值、回撤、峰值利润率（算利润锁定与组合回撤用）
 
@@ -118,6 +118,7 @@ professional-investment/
 
 - **黄金测试（核心）**：PDF 第 13 章算例 A/B/C 转为 pytest 参数化用例，输出金额必须与 PDF 表格一致（算例 A：财通 ≤663 元、长盛 ≤477 元、广发不动、摩根 ≤1,068 元、合计约 2,208 元）
 - quant-core：每个规则函数的单元测试（评分边界、闸门组合、回撤档位切换、费用窗口）
+- P1 单基金移动止盈一期以批次费率窗口形式展示（持仓页），自动判定列入二期
 - quant-api：FastAPI TestClient + 内存 SQLite 的接口测试
 - web：关键 BFF 转发的集成测试 + 页面渲染冒烟测试（Playwright 或 React Testing Library，一期从简）
 - 验证命令：`pnpm test`（web）+ `pytest`（quant-core + quant-api），写入 `TESTING.md`
