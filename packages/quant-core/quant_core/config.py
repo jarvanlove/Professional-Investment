@@ -81,6 +81,9 @@ PROFIT_LOCK_20 = 0.20
 
 DEADBAND_AMOUNT = 300.0
 DEADBAND_WEIGHT = 0.03
+# 买入侧死区（PDF 8.3）：Buy 结果 <300 元或 <总资金 1.5% 不交易；
+# 3pp 死区只属于卖出侧（PDF 9.1）与 B4 触发条件（PDF 8.2）
+DEADBAND_BUY_TOTAL_PCT = 0.015
 MAX_UNITS_PER_WEEK = 2
 
 # 每个风险子单元的单基金金额上限（PDF 07 章）
