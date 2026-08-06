@@ -7,8 +7,56 @@
 
 前置：Python ≥3.11 + [uv](https://docs.astral.sh/uv/)、Node ≥20 + pnpm。
 
+### 1. 安装依赖
+
+在**项目根目录**执行：
+
 ```bash
-pnpm install        # 根依赖（concurrently）
+pnpm install        # 安装根依赖（concurrently），同时安装 apps/web 依赖
+```
+
+后端使用 uv 管理依赖，首次启动时会自动创建虚拟环境；也可以手动进入目录安装：
+
+```bash
+cd services/quant-api
+uv sync
+```
+
+### 2. 启动后端（quant-api）
+
+```bash
+cd services/quant-api
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload
+```
+
+或在**项目根目录**一键启动后端：
+
+```bash
+pnpm dev:api
+```
+
+后端运行后：http://localhost:8010/docs 可查看 API 文档。
+
+### 3. 启动前端（web）
+
+```bash
+cd apps/web
+pnpm dev
+```
+
+或在**项目根目录**一键启动前端：
+
+```bash
+pnpm dev:web
+```
+
+前端地址：http://localhost:3010
+
+### 4. 同时启动前后端
+
+在**项目根目录**执行：
+
+```bash
 pnpm dev            # 同时启动 quant-api(:8010) 与 web(:3010)
 ```
 
