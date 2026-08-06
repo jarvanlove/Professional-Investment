@@ -19,6 +19,12 @@ pnpm dev            # 同时启动 quant-api(:8010) 与 web(:3010)
 
 净值抓取失败时：天天基金 App 抄净值 → `POST /api/nav/import`（或找 agent 代为录入）。
 
+## AI 解读（可选）
+
+信号页点「AI 解读」可把当周信号翻译成通俗中文（本周结论 / 逐只基金解释 / 风险提示）。
+先在「设置」页填写 LLM 配置（默认 DeepSeek：`https://api.deepseek.com` + `deepseek-chat`），
+也可用 `services/quant-api/.env` 的 `DEEPSEEK_API_KEY` 兜底。AI 只解释报告，不参与计算。
+
 已知口径：
 - 027521（广发）使用 589210 代理净值，需累计 ≥61 个净值点；在此之前信号计算返回 422 数据不足（by design）。
 - 同一周内多基金买入建议的可用现金不做跨基金递减（实际被每周 2 单元预算封顶，1.1 期再收紧）。

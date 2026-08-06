@@ -2,6 +2,16 @@
 
 All notable user-facing or release-level changes should be documented in this file.
 
+## [0.2.0] - 2026-08-06
+### 功能
+- UI 去原生化：交易日志/持仓页换用 shadcn（Base UI）组件；信号页增加每周操作步骤条
+- AI 信号解读：POST /api/interpret（OpenAI 兼容，默认 DeepSeek）；/settings 页可配置 API Key / Base URL / 模型
+### 设计原理
+- LLM 只解释信号报告已有内容（prompt 约束），输出不进任何计算与存储——规则确定性不受 AI 影响
+- 设置存 app_settings 表（优先级：表 > 环境变量 > 默认），Key 不落 Git
+### 注意事项
+- AI 解读为无状态调用，不保存历史；LLM 故障返回 502 不影响其他功能
+
 ## [0.1.0] - 2026-08-06
 
 ### 功能
