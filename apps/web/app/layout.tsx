@@ -23,7 +23,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="zh-CN"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">
+      <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <nav className="flex gap-4 px-8 py-3 border-b text-sm">
           <a href="/">仪表盘</a>
           <a href="/signals">每周信号</a>
