@@ -13,6 +13,7 @@ All notable user-facing or release-level changes should be documented in this fi
 ### 注意事项
 - 一期无 Alembic（create_all）；峰值/利润率历史从首次信号快照开始累积
 - P1 单基金移动止盈一期仅在批次层提示，自动判定列入二期
+- S4 硬风控卖出按 PDF 9.1 不受 25% 周缓冲；资金闸门为第四道闸门
 
 ## Unreleased
 

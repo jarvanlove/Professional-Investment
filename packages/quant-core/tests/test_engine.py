@@ -87,6 +87,46 @@ def test_sell_to_core_bypasses_weekly_buffer():
     assert ct.reason_code == "S2"
 
 
+def test_s4_correction_sell_bypasses_weekly_buffer():
+    """PDF 9.1：组合回撤达硬阈值的纠偏卖出不受 25% 周缓冲限制。"""
+    codes = ("001480", "025343", "027521", "005052")
+    scores = {c: 5 for c in codes}
+    vols = {c: 0.10 for c in codes}
+    navs = {c: uptrend() for c in codes}  # 上行净值：无 S1/S2/S3 硬信号
+    total = 10000.0
+    peak = total / 0.85  # 组合回撤 = 15% = DD_HARD
+    holdings = {"001480": 0.0, "025343": 0.0, "027521": 0.0, "005052": 5000.0}
+    account = AccountState(total_value=total, cash_value=5000.0, peak_value=peak,
+                           net_contributed=total, peak_profit_rate=0.0)
+    decisions = build_decisions("defensive", scores, vols, navs, holdings, account)
+    d = {x.code: x for x in decisions}["005052"]
+    assert d.action == "SELL" and d.reason_code == "S4"
+    # 目标 25%×10000=2500 → 卖 2500；若受 25% 周缓冲仅 1250
+    assert d.amount == pytest.approx(2500.0)
+    assert not any("25%" in n for n in d.notes)
+
+
+def test_cash_gate_blocks_buy_with_note():
+    """PDF 8.1 第四道闸门：可用现金为 0 时买入被资金闸门拦截并给出说明。"""
+    codes = ("001480", "025343", "027521", "005052")
+    scores = {c: 4 for c in codes}
+    vols = {c: 0.20 for c in codes}
+    navs = {c: uptrend() for c in codes}
+    total = 20000.0
+    holdings = {"001480": 1000.0, "025343": 3000.0, "027521": 2000.0, "005052": 4000.0}
+    account = AccountState(total_value=total, cash_value=0.0, peak_value=total,
+                           net_contributed=total, peak_profit_rate=0.0)
+    decisions = build_decisions("neutral", scores, vols, navs, holdings, account)
+    by_code = {d.code: d for d in decisions}
+    ct = by_code["001480"]  # gap>0 且其余三道闸门均通过
+    assert ct.gates["portfolio"] and ct.gates["score"] and ct.gates["position"]
+    assert ct.gates["cash"] is False
+    assert ct.action == "HOLD"
+    assert any("资金闸门" in n for n in ct.notes)
+    # 卖出侧决策的资金闸门恒为 True（不显示伪 ❌）
+    assert by_code["005052"].gap > 0 or by_code["005052"].gates["cash"] is True
+
+
 def test_build_signal_report_end_to_end():
     navs = {c: uptrend() for c in ("001480", "025343", "027521", "005052")}
     holdings = {"001480": 2107.85, "025343": 949.85, "027521": 495.12, "005052": 491.25}

@@ -60,7 +60,7 @@ def holdings_value(db: Session) -> dict[str, float]:
 
 
 def account_snapshot(db: Session) -> dict:
-    """当前账户状态 + 历史峰值（峰值取自 weekly_signals 快照与当前值的较大者）。"""
+    """当前账户状态 + 历史峰值（峰值取自 weekly_signals 快照与当前值的较大者，按净投入流量调整）。"""
     cash = cash_balance(db)
     contributed = net_contributed(db)
     holdings = holdings_value(db)
@@ -69,7 +69,9 @@ def account_snapshot(db: Session) -> dict:
         (s.total_value, s.net_contributed)
         for s in db.query(WeeklySignal).all()
     ] + [(total, contributed)]
-    peak_value = max(p for p, _ in peaks if p > 0) if any(p > 0 for p, _ in peaks) else total
+    # 流量调整：历史快照总值 + 自快照以来的净投入，避免出金造成幻影回撤
+    adjusted = [p + (contributed - c) for p, c in peaks]
+    peak_value = max(a for a in adjusted if a > 0) if any(a > 0 for a in adjusted) else total
     profit_rates = [
         (p - c) / c for p, c in peaks if c > 0
     ]

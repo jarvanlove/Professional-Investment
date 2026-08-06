@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const GATE_LABELS: Record<string, string> = {
-  portfolio: "组合风险闸门", score: "趋势闸门", position: "追高闸门",
+  portfolio: "组合风险闸门", score: "趋势闸门", position: "追高闸门", cash: "资金闸门",
 };
 const ACTION_STYLE = { BUY: "bg-green-600", SELL: "bg-red-600", HOLD: "bg-gray-400" } as const;
 

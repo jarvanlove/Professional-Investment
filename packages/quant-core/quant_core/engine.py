@@ -132,6 +132,7 @@ def build_decisions(
             "portfolio": gate_portfolio_ok(dd, fund.bucket),
             "score": gate_score_ok(code, score),
             "position": gate_position_ok(code, nav),
+            "cash": True,  # 资金闸门仅约束买入侧；卖出/不动恒为 True
         }
         d = FundDecision(
             code=code, name=fund.name, score=score,
@@ -144,8 +145,8 @@ def build_decisions(
 
         in_deadband = abs(gap) < DEADBAND_AMOUNT or abs(gap) / total < DEADBAND_WEIGHT
 
-        if gap < 0 and not in_deadband:
-            # --- 卖出侧（死区 300 元 / 3pp，PDF 9.1） ---
+        if gap < 0:
+            # --- 卖出侧：硬信号（S1/S2/S3）与 S4 硬风控不受死区限制（PDF 9.1 硬风控不受限制） ---
             sell = detect_sell_signal(code, nav, score, prev_scores.get(code))
             if sell is not None:
                 reason, frac = sell
@@ -158,14 +159,19 @@ def build_decisions(
                         amount = max(amount, current - target_value)
                 d.action, d.reason_code = "SELL", reason
                 d.amount = round(amount, 2)
-            else:
-                # 目标权重纠偏卖出：普通缓冲每周最多 25%
-                d.action, d.reason_code = "SELL", "S4" if dd >= DD_HARD else "S1"
+            elif dd >= DD_HARD:
+                # S4 硬风控纠偏：可直接卖到目标，不受 25% 缓冲与死区限制（PDF 9.1）
+                d.action, d.reason_code = "SELL", "S4"
+                d.amount = round(min(-gap, current), 2)
+            elif not in_deadband:
+                # 目标权重纠偏卖出（死区 300 元 / 3pp，PDF 9.1）：普通缓冲每周最多 25%
+                d.action, d.reason_code = "SELL", "S1"
                 d.amount = round(min(-gap, current * 0.25), 2)
                 d.notes.append("普通纠偏受每周25%缓冲约束")
         elif gap > 0:
             # --- 买入侧（死区按 Buy 结果判定：<300 元或 <总资金 1.5%，PDF 8.3） ---
-            if all(gates.values()) and cash_available > 0:
+            gates["cash"] = cash_available > 0
+            if all(gates.values()):
                 signal = detect_buy_signal(code, nav, score, prev_scores.get(code))
                 if signal is None and gap / total >= DEADBAND_WEIGHT and score >= 3:
                     signal = "B4"  # 再平衡买入
@@ -176,6 +182,8 @@ def build_decisions(
                         d.action, d.reason_code = "BUY", signal
                         d.amount = round(amount, 2)
                         d.units = factor
+            elif not gates["cash"]:
+                d.notes.append("现金不足，买入被资金闸门拦截")
             elif not gates["portfolio"]:
                 d.notes.append("组合回撤闸门：禁止新增科技")
             elif not gates["score"]:
