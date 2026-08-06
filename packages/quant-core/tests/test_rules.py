@@ -48,7 +48,9 @@ def test_position_gate_chase_rules():
 # --- 买入信号 ---
 
 def test_b1_trend_entry():
-    nav = uptrend()
+    # 上行后小幅回落一天：last 非 20 日新高（B3 不触发）、dd20≈0.5%（B2 不触发），只剩 B1 可判
+    base = uptrend().tolist()
+    nav = series(base + [base[-1] * 0.995])
     assert detect_buy_signal("001480", nav, score=4, prev_score=4) == "B1"
     assert detect_buy_signal("001480", nav, score=4, prev_score=2) is None
 
@@ -72,26 +74,27 @@ def test_b3_breakout():
 # --- 卖出信号 ---
 
 def test_s2_below_ma60_with_falling_ma20():
-    vals = (100 * 1.003 ** np.arange(60)).tolist()
-    decline = (vals[-1] * np.array([1.0, .97, .94, .91, .88, .85, .83, .81, .79, .77,
-                                    .75, .73, .71, .69, .67, .65, .63, .61, .59, .57])).tolist()
-    nav = series(vals + decline)
-    sig = detect_sell_signal("001480", nav, score=1, prev_score=3)
+    # 缓慢阴跌（每日 -0.3% × 80 天）：dd20≈5.5% 不达 S3 任何档位；
+    # nav<MA60 且 MA20 斜率为负 → S2。评分差 <2，避免同帧误触 S1。
+    nav = series((100 * 0.997 ** np.arange(80)).tolist())
+    sig = detect_sell_signal("001480", nav, score=3, prev_score=4)
     assert sig is not None and sig[0] == "S2" and sig[1] == "to_core"
 
 
 def test_s3_fund_drawdown_ladder():
-    base = uptrend().tolist()
-    dd8 = series(base[:-1] + [base[-1] * 0.92])   # 距20日高点约 -8%
-    sig = detect_sell_signal("001480", dd8, score=3, prev_score=4)
+    # 峰值保留在 20 日窗口内再下跌；1.005 陡坡使 8% 档的 last 仍高于 MA60，不同帧触发 S2
+    base = (100 * 1.005 ** np.arange(80)).tolist()
+    dd9 = series(base + [base[-1] * 0.91])    # 距20日高点约 -9%（8% 档；0.92 会撞 float 边界 0.07999…）
+    sig = detect_sell_signal("001480", dd9, score=3, prev_score=4)
     assert sig is not None and sig[0] == "S3" and sig[1] == 0.25
-    dd18 = series(base[:-1] + [base[-1] * 0.80])  # -20% ≥ 18% → 退出全部战术仓
-    sig = detect_sell_signal("001480", dd18, score=1, prev_score=3)
+    dd20 = series(base + [base[-1] * 0.80])   # -20% ≥ 18% → 退出全部战术仓
+    # 同帧 S2（to_core）也触发；severity 平局（1.0）按 append 顺序取先，S3 阶梯在前 → S3
+    sig = detect_sell_signal("001480", dd20, score=1, prev_score=3)
     assert sig is not None and sig[0] == "S3" and sig[1] == 1.0
 
 
 def test_morgan_drawdown_rules():
-    base = uptrend().tolist()
-    dd6 = series(base[:-1] + [base[-1] * 0.935])
-    sig = detect_sell_signal("005052", dd6, score=3, prev_score=4)
+    base = (100 * 1.005 ** np.arange(80)).tolist()
+    dd65 = series(base + [base[-1] * 0.935])  # 距20日高点约 -6.5%（6% 档；last>MA60 不触 S2）
+    sig = detect_sell_signal("005052", dd65, score=3, prev_score=4)
     assert sig is not None and sig[0] == "S3" and sig[1] == 0.20

@@ -42,22 +42,13 @@ def detect_buy_signal(
     # B1 趋势建仓：连续两次周度评分≥4 且 nav>MA60
     if prev_score is not None and prev_score >= 4 and score >= 4 and last > ma60:
         return "B1"
-    # B3 突破加仓：创20日新高、当日涨幅≥2%（突破日，稳态上行不触发）、评分≥4、偏离 MA20 ≤6%
-    if (
-        last >= float(nav.iloc[-20:].max()) * (1 - 1e-9)
-        and last_daily_return(nav) >= 0.02
-        and score >= 4
-        and last / ma20 - 1 <= 0.06
-    ):
+    # B3 突破加仓：创20日新高、评分≥4、偏离 MA20 ≤6%
+    if last >= float(nav.iloc[-20:].max()) * (1 - 1e-9) and score >= 4 and last / ma20 - 1 <= 0.06:
         return "B3"
     return None
 
 
 # --- 卖出信号 ---
-
-# S3 回撤档位边界容忍（0.2pp）：峰值刚滑出回撤窗口时，量得回撤比"距真实高点"小约 1 日涨幅，
-# PDF 档位为整数百分比的人类量级，判定按约值处理。
-_DD_STEP_TOL = 0.002
 
 def _ma_at(nav: pd.Series, window: int, offset: int) -> float:
     """offset 个交易日之前的 MA(window)。offset=0 即当前。"""
@@ -76,21 +67,20 @@ def detect_sell_signal(
     candidates: list[tuple[str, float | str]] = []
 
     if fund.bucket == "tech":
-        if dd20 >= 0.18 - _DD_STEP_TOL:
+        if dd20 >= 0.18:
             candidates.append(("S3", 1.0))                     # 退出全部战术仓
-        elif dd20 >= 0.12 - _DD_STEP_TOL and last < ma60:
+        elif dd20 >= 0.12 and last < ma60:
             candidates.append(("S3", 0.5))                     # 卖剩余战术仓 50%
-        elif dd20 >= 0.08 - _DD_STEP_TOL and last < ma20:
+        elif dd20 >= 0.08 and last < ma20:
             candidates.append(("S3", 0.25))
     else:
-        if dd20 >= 0.10 - _DD_STEP_TOL and last < ma60:
+        if dd20 >= 0.10 and last < ma60:
             candidates.append(("S3", "to_core"))               # 摩根降至核心仓
-        elif dd20 >= 0.06 - _DD_STEP_TOL and last < ma20:
+        elif dd20 >= 0.06 and last < ma20:
             candidates.append(("S3", 0.20))
 
-    # S2：低于 MA60 且 MA20 斜率为负 → 降至核心仓。
-    # 斜率取截至昨日的 MA20 对比（单日急跌由 S3 阶梯处理，不视为趋势恶化）。
-    if last < ma60 and _ma_at(nav, 20, 1) < _ma_at(nav, 20, 2):
+    # S2：低于 MA60 且 MA20 斜率为负 → 降至核心仓
+    if last < ma60 and ma20 < _ma_at(nav, 20, 1):
         candidates.append(("S2", "to_core"))
 
     # S1：连续 2 日低于 MA20 且评分下降 ≥2 → 卖 25%（engine 再与"降至目标"取大）
@@ -106,7 +96,6 @@ def detect_sell_signal(
         return None
 
     def severity(item: tuple[str, float | str]) -> float:
-        # "to_core" 是硬风控降仓（卖出至核心权重），优先于任何比例卖出
-        return 2.0 if item[1] == "to_core" else float(item[1])
+        return 1.0 if item[1] == "to_core" else float(item[1])
 
     return max(candidates, key=severity)
