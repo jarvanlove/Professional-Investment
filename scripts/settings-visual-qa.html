@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>设置页视觉 QA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <style>
+    :root {
+      --bg: #F8FAFC;
+      --surface: #FFFFFF;
+      --surface-subtle: #F1F5F9;
+      --text: #17212B;
+      --text-secondary: #52616B;
+      --border: #D8E0E8;
+      --primary: #0B3868;
+      --primary-foreground: #FFFFFF;
+      --accent-subtle: #F5F0EB;
+      --accent: #B89076;
+      --radius: 0.625rem;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    nav {
+      display: flex;
+      gap: 1rem;
+      padding: 0.75rem 2rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 0.875rem;
+    }
+    nav a { color: var(--text); text-decoration: none; }
+    main { padding: 2rem; max-width: 1440px; margin: 0 auto; }
+    .header {
+      display: flex; align-items: center; gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+    .header-icon {
+      width: 1.25rem; height: 1.25rem;
+      color: var(--primary);
+    }
+    h1 { font-size: 1.25rem; margin: 0; }
+    .subtitle { font-size: 0.875rem; color: var(--text-secondary); margin-top: 0.25rem; }
+    .grid {
+      display: grid;
+      grid-template-columns: 5fr 7fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+    @media (max-width: 1024px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .card-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .card-title { font-size: 0.9375rem; font-weight: 600; margin: 0; }
+    .card-body { padding: 1.25rem; }
+    .hint {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 1rem;
+    }
+    .providers {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.75rem;
+    }
+    @media (max-width: 640px) {
+      .providers { grid-template-columns: repeat(2, 1fr); }
+    }
+    .provider {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0.5rem;
+      padding: 0.75rem 0.5rem;
+      min-height: 5.5rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      font-size: 0.75rem;
+      position: relative;
+      transition: all 0.15s;
+    }
+    .provider:hover { background: var(--surface-subtle); }
+    .provider.active {
+      border-left: 4px solid var(--primary);
+      background: var(--accent-subtle);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .provider img { height: 1.75rem; width: auto; object-fit: contain; }
+    .provider-name { font-weight: 500; }
+    .dot {
+      position: absolute; top: 0.375rem; right: 0.375rem;
+      width: 0.375rem; height: 0.375rem;
+      border-radius: 9999px; background: var(--primary);
+    }
+    .section { margin-bottom: 1.25rem; }
+    .section-title {
+      font-size: 0.8125rem; font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+    label { display: block; font-size: 0.8125rem; font-weight: 500; margin-bottom: 0.375rem; }
+    input, select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.875rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+      color: var(--text);
+    }
+    .key-wrap { position: relative; }
+    .key-wrap input { padding-right: 4.5rem; }
+    .key-actions {
+      position: absolute; right: 0.25rem; top: 50%;
+      transform: translateY(-50%);
+      display: flex; gap: 0.125rem;
+    }
+    .icon-btn {
+      width: 1.75rem; height: 1.75rem;
+      border: none; background: transparent;
+      border-radius: calc(var(--radius) * 0.6);
+      cursor: pointer; display: inline-flex;
+      align-items: center; justify-content: center;
+      color: var(--text-secondary);
+    }
+    .icon-btn:hover { background: var(--surface-subtle); }
+    .model-row { display: flex; gap: 0.75rem; align-items: stretch; }
+    .model-row select { flex: 1; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.375rem;
+      padding: 0.5rem 0.875rem;
+      font-size: 0.8125rem; font-weight: 500;
+      border-radius: var(--radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .btn-outline { background: var(--surface); border-color: var(--border); color: var(--text); }
+    .btn-primary { background: var(--primary); color: var(--primary-foreground); }
+    .footer {
+      display: flex; justify-content: space-between; align-items: center;
+      padding-top: 1rem; border-top: 1px solid var(--border);
+    }
+    .success-text { font-size: 0.875rem; color: #166534; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="#">仪表盘</a>
+    <a href="#">每周信号</a>
+    <a href="#">交易日志</a>
+    <a href="#">持仓与资金</a>
+    <a href="#"><strong>设置</strong></a>
+  </nav>
+  <main>
+    <div class="header">
+      <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 3l7 4v6c0 5.25-3.5 9.74-7 11-3.5-1.26-7-5.75-7-11V7l7-4z"/>
+        <path d="M9 12l2 2 4-4"/>
+      </svg>
+      <div>
+        <h1>设置</h1>
+        <div class="subtitle">配置 LLM 供应商与模型，用于 AI 信号解读。</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">选择供应商</h2></div>
+        <div class="card-body">
+          <p class="hint">
+            点击卡片切换 Base URL 与模型，并自动恢复该供应商已保存的 API Key。通用版与 Coding 版共用同一 Key 字段。
+          </p>
+          <div class="providers">
+            <div class="provider active">
+              <img src="../apps/web/public/logos/deepseek.svg" alt="DeepSeek">
+              <span class="provider-name">DeepSeek</span>
+              <span class="dot"></span>
+            </div>
+            <div class="provider"><img src="../apps/web/public/logos/kimi.svg" alt="Kimi"><span class="provider-name">Kimi</span></div>
+            <div class="provider"><img src="../apps/web/public/logos/kimi.svg" alt="Kimi"><span class="provider-name">Kimi For Coding</span></div>
+            <div class="provider"><img src="../apps/web/public/logos/minimax.svg" alt="MiniMax"><span class="provider-name">MiniMax</span></div>
+            <div class="provider"><img src="../apps/web/public/logos/minimax.svg" alt="MiniMax"><span class="provider-name">MiniMax 国内</span></div>
+            <div class="provider"><img src="../apps/web/public/logos/qwen.svg" alt="Qwen"><span class="provider-name">Qwen</span></div>
+            <div class="provider"><img src="../apps/web/public/logos/qwen.svg" alt="Qwen"><span class="provider-name">Qwen Code</span></div>
+            <div class="provider"><img src="../apps/web/public/logos/qwen.svg" alt="Qwen"><span class="provider-name">通义千问</span></div>
+            <div class="provider"><img src="../apps/web/public/logos/glm.svg" alt="GLM"><span class="provider-name">GLM</span></div>
+            <div class="provider"><img src="../apps/web/public/logos/glm.svg" alt="GLM"><span class="provider-name">GLM Coding</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><h2 class="card-title">连接配置</h2></div>
+        <div class="card-body">
+          <div class="section">
+            <label>端点地址</label>
+            <input value="https://api.deepseek.com" readonly>
+          </div>
+          <div class="section">
+            <label>API Key</label>
+            <div class="key-wrap">
+              <input type="password" value="sk-demo8888888888888888888888888888" readonly>
+              <div class="key-actions">
+                <button class="icon-btn" title="显示/隐藏">👁</button>
+                <button class="icon-btn" title="复制">📋</button>
+              </div>
+            </div>
+          </div>
+          <div class="section">
+            <label>模型</label>
+            <div class="model-row">
+              <select><option>deepseek-v4-pro</option><option>deepseek-v4-flash</option></select>
+              <button class="btn btn-outline">获取模型列表</button>
+            </div>
+          </div>
+          <div class="footer">
+            <span class="success-text">设置已保存，立即生效。</span>
+            <button class="btn btn-primary">保存设置</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

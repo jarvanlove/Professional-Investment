@@ -1,0 +1,63 @@
+schema_version: 1
+id: settings-redesign-20260806
+title: 重新设计设置页：统一页面宽度、优化供应商卡片和表单布局，提升视觉体验
+ui_level: U2
+stage: closed
+created_at: '2026-08-06T17:41:56+08:00'
+updated_at: '2026-08-06T18:48:36+08:00'
+scope:
+  routes:
+  - /settings
+  states:
+  - default
+  - loading
+  - empty
+  - error
+  viewports:
+  - 1440x900
+  - 390x844
+design_authority:
+  owner: 用户（本人）
+  sources:
+  - 对话确认
+  approved_direction: prussian-copper
+visual_direction:
+  id: prussian-copper
+  name: 深海铜
+  tier: default
+  selection: user_approved
+  selection_note: 用户认可方案A布局 + 稳重专业视觉方向，适合投资/金融场景
+  baseline_change: true
+skill_governance:
+  requested_skill: ''
+  automatic_skills:
+  - project-ui-rules
+  - ui-visual-direction-registry
+  - ui-accessibility-check
+  - ui-screenshot-check
+  explicit_skills: []
+constraints:
+  allow_new_dependencies: false
+  baseline_update_requires_approval: true
+approvals:
+  visual_direction: approved
+  design_rfc: not_required
+  release: approved
+evidence:
+  screenshots:
+  - docs/design/screenshots/settings-desktop-1440x900.png
+  - docs/design/screenshots/settings-mobile-390x844.png
+  visual_qa_report: docs/design/qa/settings-redesign-20260806.md
+  accessibility_reports:
+  - docs/design/qa/settings-redesign-20260806-accessibility.md
+  notes:
+  - at: '2026-08-06T17:45:05+08:00'
+    note: 用户批准设计方向：布局方案A（宽屏双栏、取消max-width）+ 视觉方向 prussian-copper（稳重专业）
+  - at: '2026-08-06T18:44:52+08:00'
+    note: 设置页重设计静态视觉稿：宽屏双栏布局、普鲁士蓝主色、供应商卡片选中态、分组表单、主操作保存按钮
+requirements:
+  requires_ui_contract: true
+  requires_direction_approval: true
+  requires_visual_evidence: true
+  description: New or materially redesigned user flow. Approve direction before production
+    implementation.

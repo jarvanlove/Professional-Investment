@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Copy, Check, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Loader2, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Provider {
@@ -86,15 +86,25 @@ function ProviderBadge({ p, active, onClick }: { p: Provider; active: boolean; o
       type="button"
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center justify-center gap-1.5 rounded-xl border px-2 py-3 text-center text-xs transition-colors min-h-[5.5rem]",
+        "group flex flex-col items-center justify-center gap-2 rounded-lg border px-2 py-3 text-center text-xs transition-all min-h-[6rem] relative overflow-hidden",
         active
-          ? "border-primary bg-primary/5 text-primary ring-1 ring-primary"
-          : "border-input bg-background hover:bg-muted"
+          ? "border-l-4 border-l-primary border-y-border border-r-border bg-accent/60 text-foreground shadow-sm"
+          : "border-border bg-surface hover:bg-surface-subtle hover:border-border/80"
       )}
     >
-      <img src={p.logo} alt={p.name} className="h-8 w-auto object-contain" />
-      <span className="leading-tight">{p.name}</span>
+      <img src={p.logo} alt={p.name} className="h-7 w-auto object-contain opacity-90 group-hover:opacity-100" />
+      <span className="leading-tight font-medium">{p.name}</span>
+      {active && <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" aria-hidden />}
     </button>
+  );
+}
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-3">
+      <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+      {children}
+    </div>
   );
 }
 
@@ -140,7 +150,7 @@ export default function SettingsPage() {
     setMessage(null); setError(null);
     try {
       setForm(await api.saveSettings(form));
-      setMessage("已保存，立即生效。");
+      setMessage("设置已保存，立即生效。");
     } catch (err) { setError(String(err)); }
   }
 
@@ -177,14 +187,25 @@ export default function SettingsPage() {
 
   return (
     <main className="p-8 space-y-6">
-      <h1 className="text-xl font-bold">设置</h1>
-      <Card className="max-w-3xl">
-        <CardHeader><CardTitle className="text-base">LLM（AI 解读）</CardTitle></CardHeader>
-        <CardContent>
-          <form onSubmit={save} className="space-y-5">
-            <div className="space-y-2">
-              <Label>供应商</Label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+      <div className="flex items-center gap-3">
+        <Sparkles className="size-5 text-primary" />
+        <div>
+          <h1 className="text-xl font-bold text-foreground">设置</h1>
+          <p className="text-sm text-muted-foreground">配置 LLM 供应商与模型，用于 AI 信号解读。</p>
+        </div>
+      </div>
+
+      <form onSubmit={save}>
+        <div className="grid lg:grid-cols-12 gap-6 items-start">
+          <Card className="lg:col-span-5">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">选择供应商</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                点击卡片切换 Base URL 与模型，并自动恢复该供应商已保存的 API Key。通用版与 Coding 版共用同一 Key 字段。
+              </p>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                 {PROVIDERS.map((p) => (
                   <ProviderBadge
                     key={p.id}
@@ -194,71 +215,76 @@ export default function SettingsPage() {
                   />
                 ))}
               </div>
-              <p className="text-xs text-muted-foreground">
-                点击卡片会自动切换 Base URL、模型，并恢复该供应商已保存的 API Key；通用版与 Coding 版使用同一 API Key 字段，请确保 Key 与所选 endpoint 匹配。
-              </p>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="space-y-1">
-              <Label htmlFor="url">Base URL</Label>
-              <Input id="url" value={form.llm_base_url}
-                onChange={(e) => setForm({ ...form, llm_base_url: e.target.value })} />
-            </div>
+          <Card className="lg:col-span-7">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">连接配置</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <Section title="端点地址">
+                <Input id="url" value={form.llm_base_url}
+                  onChange={(e) => setForm({ ...form, llm_base_url: e.target.value })}
+                  placeholder="https://api.example.com/v1" />
+              </Section>
 
-            <div className="space-y-1">
-              <Label htmlFor="key">API Key</Label>
-              <div className="relative">
-                <Input id="key" type={showKey ? "text" : "password"} value={form.llm_api_key}
-                  onChange={(e) => setForm({ ...form, llm_api_key: e.target.value })}
-                  className="pr-[4.5rem]" />
-                <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
-                  <Button type="button" variant="ghost" size="icon-sm"
-                    onClick={() => setShowKey((s) => !s)}
-                    title={showKey ? "隐藏 Key" : "显示 Key"}>
-                    {showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-                  </Button>
-                  <Button type="button" variant="ghost" size="icon-sm"
-                    onClick={copyKey}
-                    disabled={!form.llm_api_key}
-                    title="复制 Key">
-                    {copied ? <Check className="size-4 text-green-600" /> : <Copy className="size-4" />}
+              <Section title="API Key">
+                <div className="relative">
+                  <Input id="key" type={showKey ? "text" : "password"} value={form.llm_api_key}
+                    onChange={(e) => setForm({ ...form, llm_api_key: e.target.value })}
+                    placeholder="sk-..."
+                    className="pr-[4.5rem]" />
+                  <div className="absolute inset-y-0 right-1 flex items-center gap-0.5">
+                    <Button type="button" variant="ghost" size="icon-sm"
+                      onClick={() => setShowKey((s) => !s)}
+                      title={showKey ? "隐藏 Key" : "显示 Key"}>
+                      {showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                    </Button>
+                    <Button type="button" variant="ghost" size="icon-sm"
+                      onClick={copyKey}
+                      disabled={!form.llm_api_key}
+                      title="复制 Key">
+                      {copied ? <Check className="size-4 text-success" /> : <Copy className="size-4" />}
+                    </Button>
+                  </div>
+                </div>
+              </Section>
+
+              <Section title="模型">
+                <div className="flex items-center gap-3">
+                  <Select value={form.llm_model}
+                    onValueChange={(v) => v && setForm({ ...form, llm_model: v })}>
+                    <SelectTrigger id="model" className="w-full"><SelectValue placeholder="选择模型" /></SelectTrigger>
+                    <SelectContent>
+                      {models.map((m) => (
+                        <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Button type="button" variant="outline" size="sm"
+                    onClick={fetchModels}
+                    disabled={loadingModels}>
+                    {loadingModels && <Loader2 className="mr-1 size-3 animate-spin" />}
+                    获取模型列表
                   </Button>
                 </div>
-              </div>
-            </div>
+                <p className="text-xs text-muted-foreground">
+                  点击“获取模型列表”会使用上方 Base URL 和 API Key 实时拉取对应供应商的模型。
+                </p>
+              </Section>
 
-            <div className="space-y-1">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="model">模型</Label>
-                <Button type="button" variant="outline" size="xs"
-                  onClick={fetchModels}
-                  disabled={loadingModels}>
-                  {loadingModels && <Loader2 className="mr-1 size-3 animate-spin" />}
-                  获取模型列表
-                </Button>
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t">
+                <div className="min-h-[1.5rem]">
+                  {message && <span className="text-sm text-success">{message}</span>}
+                  {error && <p className="text-sm text-destructive">{error}</p>}
+                </div>
+                <Button type="submit" size="default">保存设置</Button>
               </div>
-              <Select value={form.llm_model}
-                onValueChange={(v) => v && setForm({ ...form, llm_model: v })}>
-                <SelectTrigger id="model" className="w-full"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {models.map((m) => (
-                    <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                点击"获取模型列表"会使用上方 Base URL 和 API Key 实时拉取对应供应商的模型。
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <Button type="submit">保存</Button>
-              {message && <span className="text-sm text-green-700">{message}</span>}
-              {error && <p className="text-sm text-red-600">{error}</p>}
-            </div>
-          </form>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </div>
+      </form>
     </main>
   );
 }

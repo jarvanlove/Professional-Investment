@@ -1,0 +1,45 @@
+schema_version: 1
+updated: 2026-08-06
+skills:
+  - id: project-ui-rules
+    role: project-constraint
+    invocation: automatic
+    authority: enforce-project-rules
+    allowed_phases: [intake, direction, implementation, verification]
+    write_scope: []
+  - id: ui-visual-direction-registry
+    role: deterministic-check
+    invocation: automatic
+    authority: enforce-direction-selection
+    allowed_phases: [intake, direction, implementation]
+    write_scope: [docs/design/UI_VISUAL_BASELINE.json, docs/design/ui-tasks]
+  - id: ui-accessibility-check
+    role: deterministic-check
+    invocation: automatic
+    authority: report-only
+    allowed_phases: [verification]
+    write_scope: [docs/design/qa]
+  - id: ui-screenshot-check
+    role: deterministic-check
+    invocation: automatic
+    authority: report-only
+    allowed_phases: [verification]
+    write_scope: [docs/design/qa, screenshots]
+  - id: ui-visual-direction
+    role: visual-exploration
+    invocation: explicit
+    authority: candidate-only
+    allowed_phases: [direction]
+    write_scope: [docs/design/references, docs/design/ui-tasks]
+  - id: ui-visual-qa
+    role: independent-review
+    invocation: orchestrated
+    authority: report-only
+    allowed_phases: [verification]
+    write_scope: [docs/design/qa]
+rules:
+  - Generic aesthetic skills are not design authority.
+  - A skill named by the user is recorded on the UI task before it runs.
+  - Direction, global restyling, baseline updates, and release are explicit-only.
+  - The visual direction registry supplies candidates and token constraints; it does not override approved project facts.
+  - Unknown third-party skills are candidate-only until reviewed in this registry.
