@@ -23,7 +23,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <nav className="flex gap-4 px-8 py-3 border-b text-sm">
+          <a href="/">仪表盘</a>
+          <a href="/signals">每周信号</a>
+          <a href="/trades">交易日志</a>
+          <a href="/portfolio">持仓与资金</a>
+        </nav>
+        {children}
+      </body>
     </html>
   );
 }

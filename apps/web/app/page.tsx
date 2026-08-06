@@ -1,69 +1,53 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
+import type { Portfolio, SignalReport } from "@/lib/types";
+import { REGIME_LABELS } from "@/lib/types";
+import { StatCard } from "@/components/StatCard";
+import { WeightChart, type WeightPoint } from "@/components/WeightChart";
+import { Badge } from "@/components/ui/badge";
 
-export default function Home() {
+const fmt = (n: number) => n.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
+const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+
+export default function Dashboard() {
+  const [pf, setPf] = useState<Portfolio | null>(null);
+  const [sig, setSig] = useState<SignalReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    api.portfolio().then(setPf).catch((e) => setError(String(e)));
+    api.latestSignals().then(setSig).catch(() => setSig(null)); // 404 容忍
+  }, []);
+
+  if (error) return <main className="p-8 text-red-600">加载失败：{error}（quant-api 是否在运行？）</main>;
+  if (!pf) return <main className="p-8">加载中…</main>;
+
+  const a = pf.account;
+  const weights: WeightPoint[] = sig
+    ? sig.decisions.map((d) => ({
+        name: d.name.slice(0, 4), current: +(d.current_value / sig.total_value * 100).toFixed(1),
+        target: +(d.target_weight * 100).toFixed(1),
+      }))
+    : pf.funds.map((f) => ({ name: f.name.slice(0, 4), current: +(f.weight * 100).toFixed(1), target: 0 }));
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <main className="p-8 space-y-6">
+      <div className="flex items-center gap-3">
+        <h1 className="text-xl font-bold">仪表盘</h1>
+        {sig && <Badge>{REGIME_LABELS[sig.regime] ?? sig.regime}模式 · {sig.as_of}</Badge>}
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard title="账户总资产" value={`¥${fmt(a.total_value)}`} sub={`净投入 ¥${fmt(a.net_contributed)}`} />
+        <StatCard title="组合回撤" value={pct(a.portfolio_dd)} sub="回撤 ≥6% 停加科技，≥12% 防守" />
+        <StatCard title="现金比例" value={pct(a.total_value ? a.cash / a.total_value : 0)} sub={`现金 ¥${fmt(a.cash)}`} />
+        <StatCard title="峰值利润率" value={pct(a.peak_profit_rate)} sub="≥12% 锁定一半浮盈" />
+      </div>
+      <section>
+        <h2 className="font-semibold mb-2">当前权重 vs 目标权重</h2>
+        <WeightChart data={weights} />
+        {!sig && <p className="text-sm text-muted-foreground">尚未生成信号快照——到"每周信号"页点"计算信号"。</p>}
+      </section>
+    </main>
   );
 }
