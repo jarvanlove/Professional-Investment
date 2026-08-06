@@ -1,4 +1,4 @@
-const BACKEND = process.env.QUANT_API_URL ?? "http://localhost:8000";
+const BACKEND = process.env.QUANT_API_URL ?? "http://localhost:8010";
 
 async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> }) {
   const { path } = await ctx.params;

@@ -12,7 +12,7 @@ services/quant-api/    FastAPI + SQLAlchemy + SQLite（数据管道 + HTTP 层�
 apps/web/              Next.js (App Router) + TypeScript + Tailwind + shadcn/ui
 ```
 
-运行形态：quant-api 监听 `localhost:8000`，apps/web 监听 `localhost:3000`，web 的 BFF Route Handlers 聚合转发 quant-api。SQLite 文件位于 `services/quant-api/data/investment.db`，不提交 Git。
+运行形态：quant-api 监听 `localhost:8010`，apps/web 监听 `localhost:3010`，web 的 BFF Route Handlers 聚合转发 quant-api。SQLite 文件位于 `services/quant-api/data/investment.db`，不提交 Git。
 
 ## Module Boundaries
 

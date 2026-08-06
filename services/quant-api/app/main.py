@@ -8,7 +8,7 @@ from .seed import seed_funds
 app = FastAPI(title="quant-api", version="0.1.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3010"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
