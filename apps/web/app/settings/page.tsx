@@ -7,68 +7,66 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Copy, Check, Loader2, Search, Moon, AudioLines, Sparkles, Hexagon } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { LucideIcon } from "lucide-react";
 
 interface Provider {
   id: string;
   name: string;
   baseUrl: string;
-  icon: LucideIcon;
-  color: string;
+  logo: string;
   defaults: string[];
 }
 
 const PROVIDERS: Provider[] = [
   {
     id: "deepseek", name: "DeepSeek", baseUrl: "https://api.deepseek.com",
-    icon: Search, color: "text-blue-600 bg-blue-50 border-blue-200",
+    logo: "/logos/deepseek.svg",
     defaults: ["deepseek-v4-pro", "deepseek-v4-flash"],
   },
   {
     id: "kimi", name: "Kimi", baseUrl: "https://api.moonshot.ai/v1",
-    icon: Moon, color: "text-sky-600 bg-sky-50 border-sky-200",
+    logo: "/logos/kimi.svg",
     defaults: ["kimi-k3", "kimi-k2.7-code"],
   },
   {
     id: "kimi-coding", name: "Kimi For Coding", baseUrl: "https://api.kimi.com/coding/v1",
-    icon: Moon, color: "text-indigo-600 bg-indigo-50 border-indigo-200",
+    logo: "/logos/kimi.svg",
     defaults: ["kimi-k2.7-code", "kimi-k3"],
   },
   {
     id: "minimax", name: "MiniMax", baseUrl: "https://api.minimax.io/v1",
-    icon: AudioLines, color: "text-red-600 bg-red-50 border-red-200",
+    logo: "/logos/minimax.svg",
     defaults: ["MiniMax-M3", "MiniMax-M2.7"],
   },
   {
     id: "minimax-cn", name: "MiniMax 国内", baseUrl: "https://api.minimaxi.com/v1",
-    icon: AudioLines, color: "text-orange-600 bg-orange-50 border-orange-200",
+    logo: "/logos/minimax.svg",
     defaults: ["MiniMax-M3", "MiniMax-M2.7"],
   },
   {
     id: "qwen", name: "Qwen", baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-    icon: Sparkles, color: "text-purple-600 bg-purple-50 border-purple-200",
+    logo: "/logos/qwen.svg",
     defaults: ["qwen3.8-max", "qwen3.7-plus"],
   },
   {
     id: "qwen-coding", name: "Qwen Code", baseUrl: "https://coding.dashscope.aliyuncs.com/v1",
-    icon: Sparkles, color: "text-fuchsia-600 bg-fuchsia-50 border-fuchsia-200",
+    logo: "/logos/qwen.svg",
     defaults: ["qwen3-coder-plus"],
   },
   {
     id: "qwen-cn", name: "通义千问", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    icon: Sparkles, color: "text-violet-600 bg-violet-50 border-violet-200",
+    logo: "/logos/qwen.svg",
     defaults: ["qwen3.8-max", "qwen3.7-plus"],
   },
   {
     id: "glm", name: "GLM", baseUrl: "https://api.z.ai/api/paas/v4",
-    icon: Hexagon, color: "text-emerald-600 bg-emerald-50 border-emerald-200",
+    logo: "/logos/glm.svg",
     defaults: ["glm-5.2", "glm-4.7"],
   },
   {
     id: "glm-coding", name: "GLM Coding", baseUrl: "https://api.z.ai/api/coding/paas/v4",
-    icon: Hexagon, color: "text-teal-600 bg-teal-50 border-teal-200",
+    logo: "/logos/glm.svg",
     defaults: ["glm-5.2", "glm-4.7"],
   },
 ];
@@ -82,7 +80,6 @@ function normalizeOptions(models: string[]) {
 }
 
 function ProviderBadge({ p, active, onClick }: { p: Provider; active: boolean; onClick: () => void }) {
-  const Icon = p.icon;
   return (
     <button
       type="button"
@@ -94,9 +91,7 @@ function ProviderBadge({ p, active, onClick }: { p: Provider; active: boolean; o
           : "border-input bg-background hover:bg-muted"
       )}
     >
-      <span className={cn("inline-flex size-9 items-center justify-center rounded-lg border", p.color)}>
-        <Icon className="size-5" />
-      </span>
+      <img src={p.logo} alt={p.name} className="h-8 w-auto object-contain" />
       <span className="leading-tight">{p.name}</span>
     </button>
   );
@@ -180,12 +175,7 @@ export default function SettingsPage() {
         <CardContent>
           <form onSubmit={save} className="space-y-5">
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label>供应商</Label>
-                <span className="text-xs text-muted-foreground">
-                  如需官方 Logo，替换 public/logos/ 下的 svg 文件
-                </span>
-              </div>
+              <Label>供应商</Label>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {PROVIDERS.map((p) => (
                   <ProviderBadge
