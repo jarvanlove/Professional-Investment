@@ -3472,3 +3472,10 @@ git push
 - **有意偏差（已披露）**：不用 Alembic（create_all）；trades 表兼任出入金账本；P1 单基金移动止盈一期仅在批次层展示费率窗口，自动判定列入二期（PDF 允许手动核对）。
 - **类型一致性**：`FundDecision`/`SignalReport` 字段名在 engine.py（Task 9）、signals router（Task 13 asdict 序列化）、web types.ts（Task 14）三处一致；`account_snapshot` 返回键与 signals/portfolio 路由消费一致。
 - **已知风险**：`test_b2_pullback` 的构造序列接受 B1 或 B2（序列同时满足两个条件，实现按 B2 优先）；`seed_navs` 测试辅助函数的 session 获取方式给了两种实现选择（断言不变）。
+
+## 口径披露（Task 19 追记）
+
+- 算例 A 执行合计由 PDF 演示值 2,208 元更正为 1,544 元（长盛 B2 477 + 摩根 B4 1,067）。
+- 财通 B4 顺延：每周 2 单元买入预算为 PDF 8.4 的规范性约束，优先于算例的演示算术。
+- 广发不动：买入侧死区为 300 元/1.5% 总资产（PDF 8.3）；3pp 死区仅适用于卖出。
+- spec §7 测试策略的算例 A 括号口径已同步更正。
