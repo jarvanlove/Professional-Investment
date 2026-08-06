@@ -1,0 +1,25 @@
+[project]
+name = "quant-api"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn>=0.30",
+    "sqlalchemy>=2.0",
+    "pydantic>=2.7",
+    "pandas>=2.2",
+    "akshare>=1.14",
+    "quant-core",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "httpx>=0.27"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+quant-core = { path = "../../packages/quant-core", editable = true }
