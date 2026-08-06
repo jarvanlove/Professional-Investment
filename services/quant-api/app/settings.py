@@ -15,12 +15,14 @@ DEFAULTS = {
     "llm_api_key": "",
     "llm_base_url": "https://api.deepseek.com",
     "llm_model": "deepseek-v4-pro",
+    "llm_provider": "deepseek",
 }
 
 ENV_MAP = {
     "llm_api_key": "DEEPSEEK_API_KEY",
     "llm_base_url": "DEEPSEEK_BASE_URL",
     "llm_model": "DEEPSEEK_MODEL",
+    "llm_provider": "LLM_PROVIDER",
 }
 
 

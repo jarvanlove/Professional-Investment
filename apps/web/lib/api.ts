@@ -14,6 +14,7 @@ export interface Settings {
   llm_api_key: string;
   llm_base_url: string;
   llm_model: string;
+  llm_provider: string;
 }
 
 export interface InterpretResult {

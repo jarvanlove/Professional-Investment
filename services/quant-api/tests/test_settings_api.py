@@ -34,17 +34,20 @@ def test_defaults_when_empty(client, monkeypatch):
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     monkeypatch.delenv("DEEPSEEK_BASE_URL", raising=False)
     monkeypatch.delenv("DEEPSEEK_MODEL", raising=False)
+    monkeypatch.delenv("LLM_PROVIDER", raising=False)
     r = client.get("/api/settings")
     assert r.status_code == 200
     assert r.json() == {"llm_api_key": "", "llm_base_url": "https://api.deepseek.com",
-                        "llm_model": "deepseek-v4-pro"}
+                        "llm_model": "deepseek-v4-pro", "llm_provider": "deepseek"}
 
 
 def test_update_and_persist(client):
     r = client.put("/api/settings", json={"llm_model": "deepseek-v4-flash",
-                                          "llm_api_key": "sk-test"})
+                                          "llm_api_key": "sk-test",
+                                          "llm_provider": "kimi"})
     assert r.status_code == 200
     assert r.json()["llm_model"] == "deepseek-v4-flash"
+    assert r.json()["llm_provider"] == "kimi"
     assert client.get("/api/settings").json()["llm_api_key"] == "sk-test"
 
 
