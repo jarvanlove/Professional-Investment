@@ -1,0 +1,73 @@
+- generic [active] [ref=f1e1]:
+  - navigation [ref=f1e2]:
+    - link "仪表盘" [ref=f1e3] [cursor=pointer]:
+      - /url: /
+    - link "每周信号" [ref=f1e4] [cursor=pointer]:
+      - /url: /signals
+    - link "交易日志" [ref=f1e5] [cursor=pointer]:
+      - /url: /trades
+    - link "持仓与资金" [ref=f1e6] [cursor=pointer]:
+      - /url: /portfolio
+  - main [ref=f1e7]:
+    - heading "交易日志" [level=1] [ref=f1e8]
+    - generic [ref=f1e9]:
+      - generic [ref=f1e10]:
+        - text: 日期
+        - textbox "日期" [ref=f1e11]: 2026-08-06
+      - generic [ref=f1e12]:
+        - text: 方向
+        - combobox "方向" [ref=f1e13]:
+          - option "买入" [selected]
+          - option "卖出"
+          - option "入金"
+          - option "出金"
+      - generic [ref=f1e14]:
+        - text: 基金
+        - combobox "基金" [ref=f1e15]:
+          - option "财通成长优选混合A" [selected]
+          - option "长盛上证科创板芯片指数C"
+          - option "广发科创芯片设计ETF联接C"
+          - option "摩根标普港股通低波红利指数C"
+      - generic [ref=f1e16]:
+        - text: 份额
+        - textbox "份额" [ref=f1e17]
+      - generic [ref=f1e18]:
+        - text: 确认净值
+        - textbox "确认净值" [ref=f1e19]
+      - generic [ref=f1e20]:
+        - text: 理由代码
+        - combobox "理由代码" [ref=f1e21]:
+          - option "B1 趋势建仓" [selected]
+          - option "B2 回撤加仓"
+          - option "B3 突破加仓"
+          - option "B4 再平衡买入"
+          - option "S1 MA20失效"
+          - option "S2 MA60失效"
+          - option "S3 单基金回撤"
+          - option "S4 组合回撤"
+          - option "P1 过热减仓"
+          - option "P2 账户利润锁定"
+      - generic [ref=f1e22]:
+        - text: 费用估计
+        - textbox "费用估计" [ref=f1e23]
+      - generic [ref=f1e24]:
+        - text: 金额
+        - textbox "金额" [ref=f1e25]
+      - generic [ref=f1e26]:
+        - text: 备注
+        - textbox "备注" [ref=f1e27]
+      - button "记录" [ref=f1e28]
+    - table [ref=f1e29]:
+      - rowgroup [ref=f1e30]:
+        - row [ref=f1e31]:
+          - columnheader "日期" [ref=f1e32]
+          - columnheader "方向" [ref=f1e33]
+          - columnheader "基金" [ref=f1e34]
+          - columnheader "金额" [ref=f1e35]
+          - columnheader "份额" [ref=f1e36]
+          - columnheader "净值" [ref=f1e37]
+          - columnheader "理由" [ref=f1e38]
+          - columnheader "费用" [ref=f1e39]
+          - columnheader "备注" [ref=f1e40]
+      - rowgroup
+  - button "Open Next.js Dev Tools" [ref=f1e46] [cursor=pointer]

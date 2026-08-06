@@ -82,7 +82,7 @@ def test_success_returns_text(client, monkeypatch):
     assert r.status_code == 200
     body = r.json()
     assert body["text"] == "本周结论：…"
-    assert body["model"] == "deepseek-chat"
+    assert body["model"] == "deepseek-v4-pro"
     assert body["as_of"] == "2026-08-06"
 
 

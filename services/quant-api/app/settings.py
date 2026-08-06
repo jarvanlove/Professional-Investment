@@ -14,7 +14,7 @@ load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 DEFAULTS = {
     "llm_api_key": "",
     "llm_base_url": "https://api.deepseek.com",
-    "llm_model": "deepseek-chat",
+    "llm_model": "deepseek-v4-pro",
 }
 
 ENV_MAP = {

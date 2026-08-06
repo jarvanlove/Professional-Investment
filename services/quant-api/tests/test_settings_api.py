@@ -37,14 +37,14 @@ def test_defaults_when_empty(client, monkeypatch):
     r = client.get("/api/settings")
     assert r.status_code == 200
     assert r.json() == {"llm_api_key": "", "llm_base_url": "https://api.deepseek.com",
-                        "llm_model": "deepseek-chat"}
+                        "llm_model": "deepseek-v4-pro"}
 
 
 def test_update_and_persist(client):
-    r = client.put("/api/settings", json={"llm_model": "deepseek-reasoner",
+    r = client.put("/api/settings", json={"llm_model": "deepseek-v4-flash",
                                           "llm_api_key": "sk-test"})
     assert r.status_code == 200
-    assert r.json()["llm_model"] == "deepseek-reasoner"
+    assert r.json()["llm_model"] == "deepseek-v4-flash"
     assert client.get("/api/settings").json()["llm_api_key"] == "sk-test"
 
 
