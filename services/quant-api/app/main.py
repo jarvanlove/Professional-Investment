@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from .db import SessionLocal, init_db
-from .routers import nav, trades
+from .routers import nav, portfolio, signals, trades
 from .seed import seed_funds
 
 app = FastAPI(title="quant-api", version="0.1.0")
@@ -31,3 +31,5 @@ def health() -> dict:
 
 app.include_router(trades.router)
 app.include_router(nav.router)
+app.include_router(signals.router)
+app.include_router(portfolio.router)
