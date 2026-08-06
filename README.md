@@ -7,8 +7,56 @@
 
 前置：Python ≥3.11 + [uv](https://docs.astral.sh/uv/)、Node ≥20 + pnpm。
 
+### 1. 安装依赖
+
+在**项目根目录**执行：
+
 ```bash
-pnpm install        # 根依赖（concurrently）
+pnpm install        # 安装根依赖（concurrently），同时安装 apps/web 依赖
+```
+
+后端使用 uv 管理依赖，首次启动时会自动创建虚拟环境；也可以手动进入目录安装：
+
+```bash
+cd services/quant-api
+uv sync
+```
+
+### 2. 启动后端（quant-api）
+
+```bash
+cd services/quant-api
+uv run uvicorn app.main:app --host 127.0.0.1 --port 8010 --reload
+```
+
+或在**项目根目录**一键启动后端：
+
+```bash
+pnpm dev:api
+```
+
+后端运行后：http://localhost:8010/docs 可查看 API 文档。
+
+### 3. 启动前端（web）
+
+```bash
+cd apps/web
+pnpm dev
+```
+
+或在**项目根目录**一键启动前端：
+
+```bash
+pnpm dev:web
+```
+
+前端地址：http://localhost:3010
+
+### 4. 同时启动前后端
+
+在**项目根目录**执行：
+
+```bash
 pnpm dev            # 同时启动 quant-api(:8010) 与 web(:3010)
 ```
 
@@ -18,6 +66,12 @@ pnpm dev            # 同时启动 quant-api(:8010) 与 web(:3010)
 3. 每周五净值披露后重复第 2 步；有动作时在下一开放日 15:00 前到场外平台手动下单，随后回"交易日志"补录。
 
 净值抓取失败时：天天基金 App 抄净值 → `POST /api/nav/import`（或找 agent 代为录入）。
+
+## AI 解读（可选）
+
+信号页点「AI 解读」可把当周信号翻译成通俗中文（本周结论 / 逐只基金解释 / 风险提示）。
+先在「设置」页填写 LLM 配置（默认 DeepSeek：`https://api.deepseek.com` + `deepseek-chat`），
+也可用 `services/quant-api/.env` 的 `DEEPSEEK_API_KEY` 兜底。AI 只解释报告，不参与计算。
 
 已知口径：
 - 027521（广发）使用 589210 代理净值，需累计 ≥61 个净值点；在此之前信号计算返回 422 数据不足（by design）。

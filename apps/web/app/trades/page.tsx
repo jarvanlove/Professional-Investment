@@ -4,6 +4,11 @@ import { api } from "@/lib/api";
 import type { Trade } from "@/lib/types";
 import { REASON_LABELS } from "@/lib/types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 const FUNDS: [string, string][] = [
   ["001480", "财通成长优选混合A"], ["025343", "长盛上证科创板芯片指数C"],
@@ -20,13 +25,14 @@ export default function TradesPage() {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState<string | null>(null);
+  const [ok, setOk] = useState(false);
   const isFundTrade = form.direction === "buy" || form.direction === "sell";
 
   const load = () => api.trades().then(setTrades).catch((e) => setError(String(e)));
   useEffect(() => { load(); }, []);
 
   async function submit(e: React.FormEvent) {
-    e.preventDefault(); setError(null);
+    e.preventDefault(); setError(null); setOk(false);
     try {
       await api.createTrade({
         date: form.date,
@@ -40,69 +46,116 @@ export default function TradesPage() {
         note: form.note || null,
       });
       setForm(empty);
+      setOk(true);
       load();
     } catch (err) { setError(String(err)); }
   }
 
-  const input = "border rounded px-2 py-1 text-sm";
   return (
     <main className="p-8 space-y-6">
       <h1 className="text-xl font-bold">交易日志</h1>
-      <form onSubmit={submit} className="flex flex-wrap gap-2 items-end border rounded p-4">
-        <label className="text-sm">日期<input type="date" className={input} value={form.date}
-          onChange={(e) => setForm({ ...form, date: e.target.value })} /></label>
-        <label className="text-sm">方向
-          <select className={input} value={form.direction}
-            onChange={(e) => setForm({ ...form, direction: e.target.value })}>
-            {Object.entries(DIRECTION_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-          </select></label>
-        {isFundTrade && <>
-          <label className="text-sm">基金
-            <select className={input} value={form.fund_code}
-              onChange={(e) => setForm({ ...form, fund_code: e.target.value })}>
-              {FUNDS.map(([c, n]) => <option key={c} value={c}>{n}</option>)}
-            </select></label>
-          <label className="text-sm">份额<input className={`${input} w-24`} value={form.shares}
-            onChange={(e) => setForm({ ...form, shares: e.target.value })} /></label>
-          <label className="text-sm">确认净值<input className={`${input} w-24`} value={form.nav}
-            onChange={(e) => setForm({ ...form, nav: e.target.value })} /></label>
-          <label className="text-sm">理由代码
-            <select className={input} value={form.reason_code}
-              onChange={(e) => setForm({ ...form, reason_code: e.target.value })}>
-              {Object.entries(REASON_LABELS).filter(([c]) => c !== "N0").map(([c, l]) =>
-                <option key={c} value={c}>{c} {l}</option>)}
-            </select></label>
-          <label className="text-sm">费用估计<input className={`${input} w-20`} value={form.fee_estimate}
-            onChange={(e) => setForm({ ...form, fee_estimate: e.target.value })} /></label>
-        </>}
-        <label className="text-sm">金额<input required className={`${input} w-28`} value={form.amount}
-          onChange={(e) => setForm({ ...form, amount: e.target.value })} /></label>
-        <label className="text-sm">备注<input className={`${input} w-40`} value={form.note}
-          onChange={(e) => setForm({ ...form, note: e.target.value })} /></label>
-        <Button type="submit">记录</Button>
-      </form>
-      {error && <p className="text-sm text-red-600">{error}</p>}
-      <table className="w-full text-sm border">
-        <thead><tr className="bg-muted text-left">
-          {["日期", "方向", "基金", "金额", "份额", "净值", "理由", "费用", "备注"].map((h) =>
-            <th key={h} className="p-2">{h}</th>)}
-        </tr></thead>
-        <tbody>
-          {trades.map((t) => (
-            <tr key={t.id} className="border-t">
-              <td className="p-2">{t.date}</td>
-              <td className="p-2">{DIRECTION_LABELS[t.direction]}</td>
-              <td className="p-2">{t.fund_code ?? "—"}</td>
-              <td className="p-2">{t.amount.toLocaleString("zh-CN")}</td>
-              <td className="p-2">{t.shares ?? "—"}</td>
-              <td className="p-2">{t.nav ?? "—"}</td>
-              <td className="p-2">{t.reason_code ?? "—"}</td>
-              <td className="p-2">{t.fee_estimate ?? "—"}</td>
-              <td className="p-2">{t.note ?? ""}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <Card>
+        <CardHeader><CardTitle className="text-base">录入</CardTitle></CardHeader>
+        <CardContent>
+          <form onSubmit={submit} className="grid grid-cols-2 md:grid-cols-4 gap-3 items-end">
+            <div className="space-y-1">
+              <Label>日期</Label>
+              <Input type="date" value={form.date}
+                onChange={(e) => setForm({ ...form, date: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>方向</Label>
+              <Select value={form.direction}
+                onValueChange={(v) => setForm({ ...form, direction: v as string })}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {Object.entries(DIRECTION_LABELS).map(([v, l]) =>
+                    <SelectItem key={v} value={v}>{l}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            {isFundTrade && <>
+              <div className="space-y-1">
+                <Label>基金</Label>
+                <Select value={form.fund_code}
+                  onValueChange={(v) => setForm({ ...form, fund_code: v as string })}>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {FUNDS.map(([c, n]) => <SelectItem key={c} value={c}>{n}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>份额</Label>
+                <Input value={form.shares}
+                  onChange={(e) => setForm({ ...form, shares: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>确认净值</Label>
+                <Input value={form.nav}
+                  onChange={(e) => setForm({ ...form, nav: e.target.value })} />
+              </div>
+              <div className="space-y-1">
+                <Label>理由代码</Label>
+                <Select value={form.reason_code}
+                  onValueChange={(v) => setForm({ ...form, reason_code: v as string })}>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(REASON_LABELS).filter(([c]) => c !== "N0").map(([c, l]) =>
+                      <SelectItem key={c} value={c}>{c} {l}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>费用估计</Label>
+                <Input value={form.fee_estimate}
+                  onChange={(e) => setForm({ ...form, fee_estimate: e.target.value })} />
+              </div>
+            </>}
+            <div className="space-y-1">
+              <Label>金额</Label>
+              <Input required value={form.amount}
+                onChange={(e) => setForm({ ...form, amount: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <Label>备注</Label>
+              <Input value={form.note}
+                onChange={(e) => setForm({ ...form, note: e.target.value })} />
+            </div>
+            <div><Button type="submit">记录</Button></div>
+          </form>
+          {ok && <p className="text-sm text-green-700 mt-3">已记录。</p>}
+          {error && <p className="text-sm text-red-600 mt-3">{error}</p>}
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader><CardTitle className="text-base">记录列表</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {["日期", "方向", "基金", "金额", "份额", "净值", "理由", "费用", "备注"].map((h) =>
+                  <TableHead key={h}>{h}</TableHead>)}
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {trades.map((t) => (
+                <TableRow key={t.id}>
+                  <TableCell>{t.date}</TableCell>
+                  <TableCell>{DIRECTION_LABELS[t.direction]}</TableCell>
+                  <TableCell>{t.fund_code ?? "—"}</TableCell>
+                  <TableCell>{t.amount.toLocaleString("zh-CN")}</TableCell>
+                  <TableCell>{t.shares ?? "—"}</TableCell>
+                  <TableCell>{t.nav ?? "—"}</TableCell>
+                  <TableCell>{t.reason_code ?? "—"}</TableCell>
+                  <TableCell>{t.fee_estimate ?? "—"}</TableCell>
+                  <TableCell>{t.note ?? "—"}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
     </main>
   );
 }

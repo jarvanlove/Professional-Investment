@@ -49,3 +49,9 @@ class WeeklySignal(Base):
     report_json: Mapped[str] = mapped_column(Text)
     total_value: Mapped[float] = mapped_column(Float)
     net_contributed: Mapped[float] = mapped_column(Float)
+
+
+class AppSetting(Base):
+    __tablename__ = "app_settings"
+    key: Mapped[str] = mapped_column(String(32), primary_key=True)
+    value: Mapped[str] = mapped_column(Text)

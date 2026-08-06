@@ -29,6 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <a href="/signals">每周信号</a>
           <a href="/trades">交易日志</a>
           <a href="/portfolio">持仓与资金</a>
+          <a href="/settings">设置</a>
         </nav>
         {children}
       </body>
