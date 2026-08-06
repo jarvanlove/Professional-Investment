@@ -16,6 +16,11 @@ DEFAULTS = {
     "llm_base_url": "https://api.deepseek.com",
     "llm_model": "deepseek-v4-pro",
     "llm_provider": "deepseek",
+    "deepseek_api_key": "",
+    "kimi_api_key": "",
+    "minimax_api_key": "",
+    "qwen_api_key": "",
+    "glm_api_key": "",
 }
 
 ENV_MAP = {
@@ -23,6 +28,11 @@ ENV_MAP = {
     "llm_base_url": "DEEPSEEK_BASE_URL",
     "llm_model": "DEEPSEEK_MODEL",
     "llm_provider": "LLM_PROVIDER",
+    "deepseek_api_key": "DEEPSEEK_API_KEY",
+    "kimi_api_key": "KIMI_API_KEY",
+    "minimax_api_key": "MINIMAX_API_KEY",
+    "qwen_api_key": "QWEN_API_KEY",
+    "glm_api_key": "GLM_API_KEY",
 }
 
 

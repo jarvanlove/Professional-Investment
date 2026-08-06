@@ -30,25 +30,40 @@ def client():
     app.dependency_overrides.clear()
 
 
+def _clear_all_env(monkeypatch):
+    for v in ("DEEPSEEK_API_KEY", "DEEPSEEK_BASE_URL", "DEEPSEEK_MODEL", "LLM_PROVIDER",
+              "KIMI_API_KEY", "MINIMAX_API_KEY", "QWEN_API_KEY", "GLM_API_KEY"):
+        monkeypatch.delenv(v, raising=False)
+
+
 def test_defaults_when_empty(client, monkeypatch):
-    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
-    monkeypatch.delenv("DEEPSEEK_BASE_URL", raising=False)
-    monkeypatch.delenv("DEEPSEEK_MODEL", raising=False)
-    monkeypatch.delenv("LLM_PROVIDER", raising=False)
+    _clear_all_env(monkeypatch)
     r = client.get("/api/settings")
     assert r.status_code == 200
-    assert r.json() == {"llm_api_key": "", "llm_base_url": "https://api.deepseek.com",
-                        "llm_model": "deepseek-v4-pro", "llm_provider": "deepseek"}
+    assert r.json() == {
+        "llm_api_key": "", "llm_base_url": "https://api.deepseek.com",
+        "llm_model": "deepseek-v4-pro", "llm_provider": "deepseek",
+        "deepseek_api_key": "", "kimi_api_key": "", "minimax_api_key": "",
+        "qwen_api_key": "", "glm_api_key": "",
+    }
 
 
 def test_update_and_persist(client):
-    r = client.put("/api/settings", json={"llm_model": "deepseek-v4-flash",
-                                          "llm_api_key": "sk-test",
-                                          "llm_provider": "kimi"})
+    r = client.put("/api/settings", json={
+        "llm_model": "deepseek-v4-flash",
+        "llm_api_key": "sk-test",
+        "llm_provider": "kimi",
+        "deepseek_api_key": "sk-deepseek",
+        "kimi_api_key": "sk-kimi",
+    })
     assert r.status_code == 200
     assert r.json()["llm_model"] == "deepseek-v4-flash"
     assert r.json()["llm_provider"] == "kimi"
-    assert client.get("/api/settings").json()["llm_api_key"] == "sk-test"
+    assert r.json()["kimi_api_key"] == "sk-kimi"
+    body = client.get("/api/settings").json()
+    assert body["llm_api_key"] == "sk-test"
+    assert body["deepseek_api_key"] == "sk-deepseek"
+    assert body["kimi_api_key"] == "sk-kimi"
 
 
 def test_unknown_key_rejected(client):
@@ -56,6 +71,13 @@ def test_unknown_key_rejected(client):
     assert r.status_code == 422
 
 
-def test_env_fallback(client, monkeypatch):
+def test_env_fallback_for_llm_key(client, monkeypatch):
+    _clear_all_env(monkeypatch)
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-from-env")
     assert client.get("/api/settings").json()["llm_api_key"] == "sk-from-env"
+
+
+def test_env_fallback_for_provider_keys(client, monkeypatch):
+    _clear_all_env(monkeypatch)
+    monkeypatch.setenv("KIMI_API_KEY", "sk-kimi-env")
+    assert client.get("/api/settings").json()["kimi_api_key"] == "sk-kimi-env"

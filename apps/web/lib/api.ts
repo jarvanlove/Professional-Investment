@@ -15,6 +15,11 @@ export interface Settings {
   llm_base_url: string;
   llm_model: string;
   llm_provider: string;
+  deepseek_api_key: string;
+  kimi_api_key: string;
+  minimax_api_key: string;
+  qwen_api_key: string;
+  glm_api_key: string;
 }
 
 export interface InterpretResult {

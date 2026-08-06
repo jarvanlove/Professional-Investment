@@ -8,3 +8,4 @@ services/quant-api/data/
 wiki.context.json
 .obsidiantowiki/
 .superpowers/
+.playwright-mcp/

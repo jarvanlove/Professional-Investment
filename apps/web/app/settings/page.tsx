@@ -15,58 +15,59 @@ interface Provider {
   name: string;
   baseUrl: string;
   logo: string;
+  keyField: keyof Settings;
   defaults: string[];
 }
 
 const PROVIDERS: Provider[] = [
   {
     id: "deepseek", name: "DeepSeek", baseUrl: "https://api.deepseek.com",
-    logo: "/logos/deepseek.svg",
+    logo: "/logos/deepseek.svg", keyField: "deepseek_api_key",
     defaults: ["deepseek-v4-pro", "deepseek-v4-flash"],
   },
   {
     id: "kimi", name: "Kimi", baseUrl: "https://api.moonshot.ai/v1",
-    logo: "/logos/kimi.svg",
+    logo: "/logos/kimi.svg", keyField: "kimi_api_key",
     defaults: ["kimi-k3", "kimi-k2.7-code"],
   },
   {
     id: "kimi-coding", name: "Kimi For Coding", baseUrl: "https://api.kimi.com/coding/v1",
-    logo: "/logos/kimi.svg",
+    logo: "/logos/kimi.svg", keyField: "kimi_api_key",
     defaults: ["kimi-k2.7-code", "kimi-k3"],
   },
   {
     id: "minimax", name: "MiniMax", baseUrl: "https://api.minimax.io/v1",
-    logo: "/logos/minimax.svg",
+    logo: "/logos/minimax.svg", keyField: "minimax_api_key",
     defaults: ["MiniMax-M3", "MiniMax-M2.7"],
   },
   {
     id: "minimax-cn", name: "MiniMax 国内", baseUrl: "https://api.minimaxi.com/v1",
-    logo: "/logos/minimax.svg",
+    logo: "/logos/minimax.svg", keyField: "minimax_api_key",
     defaults: ["MiniMax-M3", "MiniMax-M2.7"],
   },
   {
     id: "qwen", name: "Qwen", baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
-    logo: "/logos/qwen.svg",
+    logo: "/logos/qwen.svg", keyField: "qwen_api_key",
     defaults: ["qwen3.8-max", "qwen3.7-plus"],
   },
   {
     id: "qwen-coding", name: "Qwen Code", baseUrl: "https://coding.dashscope.aliyuncs.com/v1",
-    logo: "/logos/qwen.svg",
+    logo: "/logos/qwen.svg", keyField: "qwen_api_key",
     defaults: ["qwen3-coder-plus"],
   },
   {
     id: "qwen-cn", name: "通义千问", baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
-    logo: "/logos/qwen.svg",
+    logo: "/logos/qwen.svg", keyField: "qwen_api_key",
     defaults: ["qwen3.8-max", "qwen3.7-plus"],
   },
   {
     id: "glm", name: "GLM", baseUrl: "https://api.z.ai/api/paas/v4",
-    logo: "/logos/glm.svg",
+    logo: "/logos/glm.svg", keyField: "glm_api_key",
     defaults: ["glm-5.2", "glm-4.7"],
   },
   {
     id: "glm-coding", name: "GLM Coding", baseUrl: "https://api.z.ai/api/coding/paas/v4",
-    logo: "/logos/glm.svg",
+    logo: "/logos/glm.svg", keyField: "glm_api_key",
     defaults: ["glm-5.2", "glm-4.7"],
   },
 ];
@@ -108,6 +109,10 @@ export default function SettingsPage() {
 
   useEffect(() => {
     api.settings().then((s) => {
+      const current = PROVIDERS.find((p) => p.id === s.llm_provider) ?? PROVIDERS[0];
+      if (!s.llm_api_key && current.keyField) {
+        s = { ...s, llm_api_key: s[current.keyField] ?? "" };
+      }
       setForm(s);
       setModels(normalizeOptions(defaultsFor(s.llm_provider)));
     }).catch((e) => setError(String(e)));
@@ -116,12 +121,15 @@ export default function SettingsPage() {
   function selectProvider(id: string) {
     const p = PROVIDERS.find((x) => x.id === id);
     if (!p || !form) return;
+    const current = PROVIDERS.find((x) => x.id === form.llm_provider);
+    const nextKey = form[p.keyField] ?? "";
     setModels(normalizeOptions(p.defaults));
     setForm({
       ...form,
+      ...(current ? { [current.keyField]: form.llm_api_key } : {}),
       llm_provider: id,
       llm_base_url: p.baseUrl,
-      llm_api_key: "",
+      llm_api_key: nextKey,
       llm_model: p.defaults[0] ?? "",
     });
   }
@@ -187,7 +195,7 @@ export default function SettingsPage() {
                 ))}
               </div>
               <p className="text-xs text-muted-foreground">
-                点击卡片会自动切换 Base URL、清空当前 API Key 并填充该供应商默认模型；通用版与 Coding 版使用不同的 endpoint，请搭配对应的 API Key。
+                点击卡片会自动切换 Base URL、模型，并恢复该供应商已保存的 API Key；通用版与 Coding 版使用同一 API Key 字段，请确保 Key 与所选 endpoint 匹配。
               </p>
             </div>
 
