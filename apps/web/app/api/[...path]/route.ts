@@ -22,4 +22,4 @@ async function proxy(req: Request, ctx: { params: Promise<{ path: string[] }> })
   }
 }
 
-export { proxy as GET, proxy as POST };
+export { proxy as GET, proxy as POST, proxy as PUT };

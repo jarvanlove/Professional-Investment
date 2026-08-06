@@ -10,6 +10,18 @@ export interface RefreshResult {
   results: { code: string; status: string; added: number; error?: string }[];
 }
 
+export interface Settings {
+  llm_api_key: string;
+  llm_base_url: string;
+  llm_model: string;
+}
+
+export interface InterpretResult {
+  text: string;
+  model: string;
+  as_of: string;
+}
+
 export const api = {
   latestSignals: () => req<SignalReport>("/signals/latest"),
   computeSignals: () => req<SignalReport>("/signals/compute", { method: "POST" }),
@@ -22,4 +34,12 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(t),
     }),
+  settings: () => req<Settings>("/settings"),
+  saveSettings: (s: Partial<Settings>) =>
+    req<Settings>("/settings", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(s),
+    }),
+  interpret: () => req<InterpretResult>("/interpret", { method: "POST" }),
 };
