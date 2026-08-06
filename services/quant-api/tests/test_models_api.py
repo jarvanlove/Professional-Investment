@@ -106,3 +106,34 @@ def test_tolerant_parsing_missing_data(client, monkeypatch):
     r = client.get("/api/settings/models")
     assert r.status_code == 200
     assert r.json()["models"] == []
+
+
+def test_preview_success(client, monkeypatch):
+    class FakeResp:
+        def raise_for_status(self):
+            pass
+
+        def json(self):
+            return {
+                "object": "list",
+                "data": [
+                    {"id": "kimi-k3", "object": "model", "owned_by": "moonshot"},
+                ],
+            }
+
+    monkeypatch.setattr(httpx, "get", lambda *a, **k: FakeResp())
+    r = client.post("/api/settings/models-preview", json={
+        "base_url": "https://api.moonshot.ai/v1",
+        "api_key": "sk-test",
+    })
+    assert r.status_code == 200
+    assert r.json()["models"] == ["kimi-k3"]
+
+
+def test_preview_missing_key(client):
+    r = client.post("/api/settings/models-preview", json={
+        "base_url": "https://api.moonshot.ai/v1",
+        "api_key": "",
+    })
+    assert r.status_code == 503
+    assert "未配置" in r.json()["detail"]

@@ -46,6 +46,11 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(s),
     }),
-  models: () => req<ModelsResult>("/settings/models"),
+  models: (base_url: string, api_key: string) =>
+    req<ModelsResult>("/settings/models-preview", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ base_url, api_key }),
+    }),
   interpret: () => req<InterpretResult>("/interpret", { method: "POST" }),
 };
