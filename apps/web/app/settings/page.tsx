@@ -7,12 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Copy, Check } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Loader2 } from "lucide-react";
 
-const MODELS = [
+const DEFAULT_MODELS = [
   { value: "deepseek-v4-pro", label: "deepseek-v4-pro（最新推荐）" },
   { value: "deepseek-v4-flash", label: "deepseek-v4-flash（更快更便宜）" },
 ];
+
+function normalizeOptions(models: string[]) {
+  return models.map((id) => ({ value: id, label: id }));
+}
 
 export default function SettingsPage() {
   const [form, setForm] = useState<Settings | null>(null);
@@ -20,6 +24,8 @@ export default function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [showKey, setShowKey] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [models, setModels] = useState<{ value: string; label: string }[]>(DEFAULT_MODELS);
+  const [loadingModels, setLoadingModels] = useState(false);
 
   useEffect(() => {
     api.settings().then(setForm).catch((e) => setError(String(e)));
@@ -40,6 +46,27 @@ export default function SettingsPage() {
     await navigator.clipboard.writeText(form.llm_api_key);
     setCopied(true);
     setTimeout(() => setCopied(false), 1500);
+  }
+
+  async function fetchModels() {
+    setLoadingModels(true);
+    setError(null);
+    try {
+      const { models: ids } = await api.models();
+      const opts = normalizeOptions(ids.length > 0 ? ids : DEFAULT_MODELS.map((m) => m.value));
+      setModels(opts);
+      setForm((prev) => {
+        if (!prev) return prev;
+        const current = prev.llm_model;
+        const valid = ids.length > 0 ? ids : DEFAULT_MODELS.map((m) => m.value);
+        return { ...prev, llm_model: valid.includes(current) ? current : valid[0] };
+      });
+      setMessage(`已获取 ${ids.length} 个模型。`);
+    } catch (err) {
+      setError(String(err));
+    } finally {
+      setLoadingModels(false);
+    }
   }
 
   if (error && !form) return <main className="p-8 text-red-600">加载失败：{error}</main>;
@@ -79,16 +106,27 @@ export default function SettingsPage() {
                 onChange={(e) => setForm({ ...form, llm_base_url: e.target.value })} />
             </div>
             <div className="space-y-1">
-              <Label htmlFor="model">模型</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="model">模型</Label>
+                <Button type="button" variant="outline" size="xs"
+                  onClick={fetchModels}
+                  disabled={loadingModels}>
+                  {loadingModels && <Loader2 className="mr-1 size-3 animate-spin" />}
+                  获取模型列表
+                </Button>
+              </div>
               <Select value={form.llm_model}
                 onValueChange={(v) => v && setForm({ ...form, llm_model: v })}>
                 <SelectTrigger id="model" className="w-full"><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {MODELS.map((m) => (
+                  {models.map((m) => (
                     <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+              <p className="text-xs text-muted-foreground">
+                点击"获取模型列表"将从已保存的 Base URL 实时拉取供应商模型；若刚修改 Key/URL，请先保存。
+              </p>
             </div>
             <div className="flex items-center gap-3">
               <Button type="submit">保存</Button>

@@ -22,6 +22,10 @@ export interface InterpretResult {
   as_of: string;
 }
 
+export interface ModelsResult {
+  models: string[];
+}
+
 export const api = {
   latestSignals: () => req<SignalReport>("/signals/latest"),
   computeSignals: () => req<SignalReport>("/signals/compute", { method: "POST" }),
@@ -41,5 +45,6 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(s),
     }),
+  models: () => req<ModelsResult>("/settings/models"),
   interpret: () => req<InterpretResult>("/interpret", { method: "POST" }),
 };

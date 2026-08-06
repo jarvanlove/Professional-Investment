@@ -73,7 +73,8 @@ pnpm dev            # 同时启动 quant-api(:8010) 与 web(:3010)
 
 信号页点「AI 解读」可把当周信号翻译成通俗中文（本周结论 / 逐只基金解释 / 风险提示）。
 先在「设置」页填写 LLM 配置（默认 DeepSeek：`https://api.deepseek.com` + `deepseek-v4-pro`），
-也可用 `services/quant-api/.env` 的 `DEEPSEEK_API_KEY` 兜底。AI 只解释报告，不参与计算。
+也可用 `services/quant-api/.env` 的 `DEEPSEEK_API_KEY` 兜底；设置页支持点击"获取模型列表"从供应商实时拉取可用模型。
+AI 只解释报告，不参与计算。
 
 已知口径：
 - 027521（广发）使用 589210 代理净值，需累计 ≥61 个净值点；在此之前信号计算返回 422 数据不足（by design）。
