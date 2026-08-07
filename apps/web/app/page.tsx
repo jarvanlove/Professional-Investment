@@ -85,7 +85,17 @@ export default function Dashboard() {
 
   const totalDailyPnl = pf.funds.reduce((sum, f) => sum + (f.daily_pnl ?? 0), 0);
   const totalEstPnl = live?.total_estimated_pnl ?? 0;
-  const displayTotalPnl = isEstimate ? totalEstPnl : totalDailyPnl;
+
+  // 盘中估算模式下，有估算的用估算，没估算的用官方净值日收益，避免空白
+  const hybridEstPnl = live
+    ? live.funds.reduce((sum, lf) => {
+        if (lf.has_estimate) return sum + (lf.estimated_pnl ?? 0);
+        const official = pf.funds.find((f) => f.code === lf.code);
+        return sum + (official?.daily_pnl ?? 0);
+      }, 0)
+    : totalDailyPnl;
+
+  const displayTotalPnl = isEstimate ? hybridEstPnl : totalDailyPnl;
   const pnlTone = displayTotalPnl > 0 ? "danger" : displayTotalPnl < 0 ? "success" : "default"; // 红涨绿跌
   const liveTime = live?.as_of;
   const hasAnyEstimate = live?.funds.some((f) => f.has_estimate) ?? false;
@@ -144,13 +154,7 @@ export default function Dashboard() {
 
         {isEstimate && !hasAnyEstimate && (
           <p className="text-sm text-muted-foreground">
-            当前非交易时间或暂无盘中估算。点击“盘中估算”按钮重试。
-          </p>
-        )}
-
-        {isEstimate && live && live.funds.some((f) => !f.has_estimate) && (
-          <p className="text-sm text-muted-foreground">
-            以下基金暂无盘中估算：{live.funds.filter((f) => !f.has_estimate).map((f) => f.name.split(" ")[0]).join("、")}。
+            当前非交易时间或暂无基金提供盘中估算，已自动用官方净值收益补齐。
           </p>
         )}
 
@@ -159,32 +163,57 @@ export default function Dashboard() {
             className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]"
             title={isEstimate ? "今日盈亏（估算）" : "今日盈亏"}
             value={`¥${signed(displayTotalPnl)}`}
-            sub={isEstimate ? (liveTime ? `按 ${liveTime} 盘中估算` : "暂无盘中估算") : (latestNavDate ? `按 ${latestNavDate} 净值 vs 上一日` : "暂无净值数据")}
+            sub={isEstimate
+              ? (liveTime ? `按 ${liveTime} 盘中估算；无估算基金使用官方净值` : "暂无盘中估算")
+              : (latestNavDate ? `按 ${latestNavDate} 净值 vs 上一日` : "暂无净值数据")}
             icon={Wallet}
             tone={pnlTone}
           />
           {isEstimate
-            ? live?.funds.filter((f) => f.has_estimate).map((f) => {
-                const pnl = f.estimated_pnl ?? 0;
-                const ret = f.change_pct ?? 0;
-                const isUp = pnl >= 0;
+            ? (live ?? { funds: [] }).funds.map((f) => {
+                if (f.has_estimate) {
+                  const pnl = f.estimated_pnl ?? 0;
+                  const ret = f.change_pct ?? 0;
+                  const isUp = pnl >= 0;
+                  return (
+                    <Card key={f.code} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col justify-between">
+                      <CardHeader className="pb-2">
+                        <CardTitle className="text-sm text-muted-foreground truncate" title={f.name}>{f.name}</CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-1">
+                        <div className={cn("text-2xl font-bold tabular-nums", isUp ? "text-buy" : "text-sell")}>
+                          ¥{signed(pnl)}
+                        </div>
+                        <div className={cn("text-sm tabular-nums", isUp ? "text-buy" : "text-sell")}>
+                          <>{ret >= 0 ? "+" : ""}{(ret * 100).toFixed(2)}% {f.note && <span className="text-muted-foreground ml-1">({f.note})</span>}</>
+                        </div>
+                        {f.estimated_nav && (
+                          <div className="text-xs text-muted-foreground tabular-nums">
+                            估 {f.estimated_nav.toFixed(4)} · 市值 ¥{fmt(f.estimated_value)}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  );
+                }
+                // 无估算：回退显示官方净值日收益
+                const official = pf.funds.find((pf) => pf.code === f.code);
+                const dailyPnl = official?.daily_pnl ?? 0;
+                const dailyReturn = official?.daily_return ?? 0;
+                const isUp = dailyPnl > 0;
                 return (
-                  <Card key={f.code} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col justify-between">
+                  <Card key={f.code} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col justify-between opacity-80">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm text-muted-foreground truncate" title={f.name}>{f.name}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-1">
                       <div className={cn("text-2xl font-bold tabular-nums", isUp ? "text-buy" : "text-sell")}>
-                        ¥{signed(pnl)}
+                        ¥{signed(dailyPnl)}
                       </div>
                       <div className={cn("text-sm tabular-nums", isUp ? "text-buy" : "text-sell")}>
-                        <>{ret >= 0 ? "+" : ""}{(ret * 100).toFixed(2)}% {f.note && <span className="text-muted-foreground ml-1">({f.note})</span>}</>
+                        {dailyReturn >= 0 ? "+" : ""}{(dailyReturn * 100).toFixed(2)}%
                       </div>
-                      {f.estimated_nav && (
-                        <div className="text-xs text-muted-foreground tabular-nums">
-                          估 {f.estimated_nav.toFixed(4)} · 市值 ¥{fmt(f.estimated_value)}
-                        </div>
-                      )}
+                      <div className="text-xs text-amber-600">暂无盘中估值，显示官方净值收益</div>
                     </CardContent>
                   </Card>
                 );

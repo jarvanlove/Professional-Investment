@@ -5,7 +5,10 @@ import re
 import requests
 
 
-_TIANTIAN_API = "https://fundcomapi.tiantianfunds.com/mm/newCore/FundValuationLast"
+_TIANTIAN_APIS = [
+    "https://fundcomapi.tiantianfunds.com/mm/newCore/FundValuationLast",
+    "https://fundcomapi.eastmoney.com/mm/newCore/FundValuationLast",
+]
 _SINA_API = "https://hq.sinajs.cn/list={market}{code}"
 
 
@@ -26,22 +29,28 @@ def fetch_fund_estimates(codes: list[str]) -> dict[str, dict]:
         return {}
 
     fields = "FCODE,SHORTNAME,GSZZL,GZTIME,GSZ,NAV,PDATE"
-    try:
-        resp = requests.get(
-            _TIANTIAN_API,
-            params={"FCODES": ",".join(codes), "FIELDS": fields},
-            headers={
-                "User-Agent": (
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
-                ),
-                "Referer": "https://fund.eastmoney.com/",
-            },
-            timeout=10,
-        )
-        resp.raise_for_status()
-        payload = resp.json()
-    except Exception:
+    payload: dict | None = None
+    for url in _TIANTIAN_APIS:
+        try:
+            resp = requests.get(
+                url,
+                params={"FCODES": ",".join(codes), "FIELDS": fields},
+                headers={
+                    "User-Agent": (
+                        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+                    ),
+                    "Referer": "https://fund.eastmoney.com/",
+                },
+                timeout=10,
+            )
+            resp.raise_for_status()
+            payload = resp.json()
+            break
+        except Exception:
+            continue
+
+    if not payload:
         return {}
 
     out = {}
