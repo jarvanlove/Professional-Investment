@@ -64,23 +64,22 @@ export default function SignalsPage() {
         icon={TrendingUp}
         title="每周信号"
         description="更新净值 → 计算信号 → 按建议下单 → 补录日志。"
-        actions={
-          <>
-            <Button onClick={refreshNav} disabled={busy !== null}>
-              {busy === "nav" && <Loader2 className="size-4 animate-spin" />}
-              {busy === "nav" ? "抓取中…" : "1. 更新净值"}
-            </Button>
-            <Button onClick={compute} disabled={busy !== null} variant="secondary">
-              {busy === "compute" && <Loader2 className="size-4 animate-spin" />}
-              {busy === "compute" ? "计算中…" : "2. 计算信号"}
-            </Button>
-            <Button onClick={interpret} disabled={busy !== null} variant="outline">
-              {busy === "interpret" && <Loader2 className="size-4 animate-spin" />}
-              {busy === "interpret" ? "解读中…" : "AI 解读"}
-            </Button>
-          </>
-        }
       />
+
+      <div className="flex flex-wrap items-center gap-2">
+        <Button onClick={refreshNav} disabled={busy !== null}>
+          {busy === "nav" && <Loader2 className="size-4 animate-spin" />}
+          {busy === "nav" ? "抓取中…" : "1. 更新净值"}
+        </Button>
+        <Button onClick={compute} disabled={busy !== null} variant="secondary">
+          {busy === "compute" && <Loader2 className="size-4 animate-spin" />}
+          {busy === "compute" ? "计算中…" : "2. 计算信号"}
+        </Button>
+        <Button onClick={interpret} disabled={busy !== null} variant="outline">
+          {busy === "interpret" && <Loader2 className="size-4 animate-spin" />}
+          {busy === "interpret" ? "解读中…" : "AI 解读"}
+        </Button>
+      </div>
 
       <div className="flex flex-wrap items-center gap-1 text-xs">
         {STEPS.map((s, i) => (

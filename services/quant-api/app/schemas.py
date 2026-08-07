@@ -34,3 +34,10 @@ class TradeOut(TradeIn):
     id: int
 
     model_config = {"from_attributes": True}
+
+
+class TradePage(BaseModel):
+    items: list[TradeOut]
+    total: int
+    page: int
+    page_size: int

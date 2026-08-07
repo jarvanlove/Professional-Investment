@@ -1,9 +1,10 @@
 "use client";
 import { useEffect, useState } from "react";
-import { api } from "@/lib/api";
+import { api, TradePage } from "@/lib/api";
 import type { Trade } from "@/lib/types";
 import { REASON_LABELS } from "@/lib/types";
 import { PageHeader } from "@/components/page-header";
+import { Pagination } from "@/components/ui/pagination";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,14 +33,23 @@ const empty = {
 };
 
 export default function TradesPage() {
-  const [trades, setTrades] = useState<Trade[]>([]);
+  const [data, setData] = useState<TradePage>({ items: [], total: 0, page: 1, page_size: 20 });
+  const [fundFilter, setFundFilter] = useState<string>("");
+  const [page, setPage] = useState(1);
   const [form, setForm] = useState(empty);
   const [error, setError] = useState<string | null>(null);
   const [ok, setOk] = useState(false);
   const isFundTrade = form.direction === "buy" || form.direction === "sell";
 
-  const load = () => api.trades().then(setTrades).catch((e) => setError(String(e)));
-  useEffect(() => { load(); }, []);
+  const load = () =>
+    api
+      .trades({ fund_code: fundFilter || undefined, page, page_size: 20 })
+      .then(setData)
+      .catch((e) => setError(String(e)));
+
+  useEffect(() => {
+    load();
+  }, [fundFilter, page]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault(); setError(null); setOk(false);
@@ -57,9 +67,21 @@ export default function TradesPage() {
       });
       setForm(empty);
       setOk(true);
+      setPage(1);
       load();
     } catch (err) { setError(String(err)); }
   }
+
+  const fundLabel = (code: string | null) => {
+    if (!code) return "—";
+    const found = FUNDS.find(([c]) => c === code);
+    return found ? `${found[0]} ${found[1]}` : code;
+  };
+
+  const reasonLabel = (code: string | null) => {
+    if (!code) return "—";
+    return `${code} ${REASON_LABELS[code] ?? ""}`;
+  };
 
   return (
     <main className="p-8 space-y-6">
@@ -76,7 +98,7 @@ export default function TradesPage() {
             <div className="space-y-1">
               <Label>方向</Label>
               <Select value={form.direction}
-                onValueChange={(v) => setForm({ ...form, direction: v as string })}>
+                onValueChange={(v) => setForm({ ...form, direction: v as string })} >
                 <SelectTrigger className="w-full">
                   <SelectValue>{(v: string) => DIRECTION_LABELS[v] ?? v}</SelectValue>
                 </SelectTrigger>
@@ -90,7 +112,7 @@ export default function TradesPage() {
               <div className="space-y-1">
                 <Label>基金</Label>
                 <Select value={form.fund_code}
-                  onValueChange={(v) => setForm({ ...form, fund_code: v as string })}>
+                  onValueChange={(v) => setForm({ ...form, fund_code: v as string })} >
                   <SelectTrigger className="w-full">
                     <SelectValue>{(v: string) => FUNDS.find(([c]) => c === v)?.[1] ?? v}</SelectValue>
                   </SelectTrigger>
@@ -112,7 +134,7 @@ export default function TradesPage() {
               <div className="space-y-1">
                 <Label>理由代码</Label>
                 <Select value={form.reason_code}
-                  onValueChange={(v) => setForm({ ...form, reason_code: v as string })}>
+                  onValueChange={(v) => setForm({ ...form, reason_code: v as string })} >
                   <SelectTrigger className="w-full">
                     <SelectValue>{(v: string) => `${v} ${REASON_LABELS[v] ?? ""}`}</SelectValue>
                   </SelectTrigger>
@@ -145,8 +167,22 @@ export default function TradesPage() {
         </CardContent>
       </Card>
       <Card>
-        <CardHeader><CardTitle className="text-base">记录列表</CardTitle></CardHeader>
-        <CardContent>
+        <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <CardTitle className="text-base">记录列表</CardTitle>
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">筛选基金：</span>
+            <Select value={fundFilter} onValueChange={(v) => { setFundFilter(v ?? ""); setPage(1); }} >
+              <SelectTrigger className="w-[220px]">
+                <SelectValue>{(v: string) => v ? FUNDS.find(([c]) => c === v)?.[1] ?? v : "全部基金"}</SelectValue>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">全部基金</SelectItem>
+                {FUNDS.map(([c, n]) => <SelectItem key={c} value={c}>{c} {n}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <Table>
             <TableHeader>
               <TableRow>
@@ -160,7 +196,7 @@ export default function TradesPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {trades.map((t) => (
+              {data.items.map((t) => (
                 <TableRow key={t.id}>
                   <TableCell className="tabular-nums">{t.date}</TableCell>
                   <TableCell>
@@ -168,17 +204,23 @@ export default function TradesPage() {
                       {DIRECTION_LABELS[t.direction]}
                     </Badge>
                   </TableCell>
-                  <TableCell>{t.fund_code ?? "—"}</TableCell>
+                  <TableCell>{fundLabel(t.fund_code)}</TableCell>
                   <TableCell className="text-right tabular-nums font-medium">{t.amount.toLocaleString("zh-CN")}</TableCell>
                   <TableCell className="text-right tabular-nums">{t.shares ?? "—"}</TableCell>
                   <TableCell className="text-right tabular-nums">{t.nav ?? "—"}</TableCell>
-                  <TableCell>{t.reason_code ?? "—"}</TableCell>
+                  <TableCell>{reasonLabel(t.reason_code)}</TableCell>
                   <TableCell className="text-right tabular-nums">{t.fee_estimate ?? "—"}</TableCell>
                   <TableCell>{t.note ?? "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          <Pagination
+            page={data.page}
+            pageSize={data.page_size}
+            total={data.total}
+            onPageChange={setPage}
+          />
         </CardContent>
       </Card>
     </main>

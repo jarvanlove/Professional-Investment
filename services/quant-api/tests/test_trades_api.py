@@ -41,8 +41,47 @@ def test_deposit_then_buy_flow(client):
         "amount": 2107.85, "shares": 1500.0, "nav": 1.4052, "reason_code": "B1",
     })
     assert r.status_code == 201, r.text
-    trades = client.get("/api/trades").json()
-    assert len(trades) == 2
+    payload = client.get("/api/trades").json()
+    assert payload["total"] == 2
+    assert len(payload["items"]) == 2
+
+
+def test_list_filter_by_fund_code(client):
+    client.post("/api/trades", json={
+        "date": "2026-08-01", "direction": "buy", "fund_code": "001480",
+        "amount": 1000, "shares": 100, "nav": 1.0, "reason_code": "B1",
+    })
+    client.post("/api/trades", json={
+        "date": "2026-08-01", "direction": "buy", "fund_code": "025343",
+        "amount": 1000, "shares": 100, "nav": 1.0, "reason_code": "B1",
+    })
+    client.post("/api/trades", json={
+        "date": "2026-08-01", "direction": "deposit", "amount": 5000,
+    })
+    payload = client.get("/api/trades?fund_code=001480").json()
+    assert payload["total"] == 1
+    assert payload["items"][0]["fund_code"] == "001480"
+
+
+def test_list_pagination(client):
+    for i in range(5):
+        client.post("/api/trades", json={
+            "date": f"2026-08-{i+1:02d}", "direction": "buy", "fund_code": "001480",
+            "amount": 1000, "shares": 100, "nav": 1.0, "reason_code": "B1",
+        })
+    payload = client.get("/api/trades?page=1&page_size=2").json()
+    assert payload["total"] == 5
+    assert len(payload["items"]) == 2
+    assert payload["page"] == 1
+    assert payload["page_size"] == 2
+
+    payload = client.get("/api/trades?page=2&page_size=2").json()
+    assert len(payload["items"]) == 2
+    assert payload["page"] == 2
+
+    payload = client.get("/api/trades?page=3&page_size=2").json()
+    assert len(payload["items"]) == 1
+    assert payload["page"] == 3
 
 
 def test_buy_requires_fund_fields(client):

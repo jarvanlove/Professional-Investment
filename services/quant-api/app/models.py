@@ -32,7 +32,7 @@ class Trade(Base):
     __tablename__ = "trades"
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     date: Mapped[date]
-    fund_code: Mapped[str | None] = mapped_column(String(8), nullable=True)
+    fund_code: Mapped[str | None] = mapped_column(String(8), nullable=True, index=True)
     direction: Mapped[str] = mapped_column(String(8))  # buy/sell/deposit/withdraw
     amount: Mapped[float] = mapped_column(Float)
     shares: Mapped[float | None] = mapped_column(Float, nullable=True)

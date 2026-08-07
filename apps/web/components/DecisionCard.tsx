@@ -45,7 +45,7 @@ export function DecisionCard({ d }: { d: FundDecision }) {
             </span>
           ))}
         </div>
-        <div>理由：<Badge variant="outline">{d.reason_code} {REASON_LABELS[d.reason_code]}</Badge></div>
+        <div>理由：<Badge variant="outline">{d.reason_code} {REASON_LABELS[d.reason_code] ?? ""}</Badge></div>
         {d.notes.length > 0 && (
           <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-800">
             <div className="flex items-center gap-1.5 text-xs font-medium mb-1">

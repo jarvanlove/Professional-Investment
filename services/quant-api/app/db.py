@@ -16,6 +16,11 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 
 def init_db() -> None:
     Base.metadata.create_all(engine)
+    # SQLite create_all 不会给已存在表补索引，此处幂等地创建
+    with engine.begin() as conn:
+        conn.exec_driver_sql(
+            "CREATE INDEX IF NOT EXISTS ix_trades_fund_code ON trades (fund_code)"
+        )
 
 
 def get_db():

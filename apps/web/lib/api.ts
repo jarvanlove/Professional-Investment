@@ -22,6 +22,13 @@ export interface Settings {
   glm_api_key: string;
 }
 
+export interface TradePage {
+  items: Trade[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
 export interface InterpretResult {
   text: string;
   model: string;
@@ -37,7 +44,14 @@ export const api = {
   computeSignals: () => req<SignalReport>("/signals/compute", { method: "POST" }),
   refreshNav: () => req<RefreshResult>("/nav/refresh", { method: "POST" }),
   portfolio: () => req<Portfolio>("/portfolio"),
-  trades: () => req<Trade[]>("/trades"),
+  trades: (params?: { fund_code?: string; page?: number; page_size?: number }) => {
+    const q = new URLSearchParams();
+    if (params?.fund_code) q.set("fund_code", params.fund_code);
+    if (params?.page) q.set("page", String(params.page));
+    if (params?.page_size) q.set("page_size", String(params.page_size));
+    const qs = q.toString();
+    return req<TradePage>(`/trades${qs ? `?${qs}` : ""}`);
+  },
   createTrade: (t: Omit<Trade, "id">) =>
     req<Trade>("/trades", {
       method: "POST",

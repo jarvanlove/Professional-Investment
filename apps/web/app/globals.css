@@ -58,6 +58,7 @@
 }
 
 :root {
+  color-scheme: light;
   --background: #F8FAFC;
   --foreground: #17212B;
   --card: #FFFFFF;
@@ -103,6 +104,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --background: #0F172A;
   --foreground: #F8FAFC;
   --card: #1E293B;
@@ -155,5 +157,12 @@
   }
   html {
     @apply font-sans;
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(22%) sepia(42%) saturate(2000%) hue-rotate(185deg);
+  }
+  input[type="date"]:focus-visible::-webkit-calendar-picker-indicator {
+    filter: invert(35%) sepia(60%) saturate(1500%) hue-rotate(190deg);
   }
 }
