@@ -6,9 +6,9 @@ import { cn } from "@/lib/utils";
 
 const NAV = [
   { href: "/", label: "仪表盘", icon: LayoutDashboard },
+  { href: "/portfolio", label: "持仓与资金", icon: Wallet },
   { href: "/signals", label: "每周信号", icon: TrendingUp },
   { href: "/trades", label: "交易日志", icon: Receipt },
-  { href: "/portfolio", label: "持仓与资金", icon: Wallet },
   { href: "/settings", label: "设置", icon: Settings },
 ];
 

@@ -110,19 +110,30 @@ export default function Dashboard() {
             {liveTime && <span className="text-sm text-muted-foreground">数据时间 {liveTime}</span>}
           </div>
           <div className="flex items-center gap-2">
-            <Button onClick={refreshLive} disabled={refreshing} variant="outline" size="sm">
+            <Button onClick={refreshLive} disabled={refreshing} variant="outline" size="sm" title="交易日白天获取盘中估算净值（免费接口，可能有延迟）">
               {refreshing ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
               刷新估算
             </Button>
-            <Button onClick={refreshNav} disabled={refreshing} variant="secondary" size="sm">
+            <Button onClick={refreshNav} disabled={refreshing} variant="secondary" size="sm" title="晚上 7–9 点基金公司公布正式净值后使用，更新精确资产">
               刷新净值
             </Button>
           </div>
         </div>
 
+        <p className="text-sm text-muted-foreground">
+          <strong>刷新估算</strong>：交易日白天用，基于指数/ETF 走势估算盘中净值，有偏差。
+          <strong>刷新净值</strong>：晚上正式净值公布后使用，更新精确总资产和持仓。
+        </p>
+
         {!hasAnyEstimate && (
           <p className="text-sm text-muted-foreground">
             当前非交易时间或暂无盘中估算。点击“刷新估算”重试；晚上净值公布后请点“刷新净值”。
+          </p>
+        )}
+
+        {live && live.funds.some((f) => !f.has_estimate) && (
+          <p className="text-sm text-muted-foreground">
+            以下基金暂无盘中估算：{live.funds.filter((f) => !f.has_estimate).map((f) => f.name.split(" ")[0]).join("、")}。晚上刷新净值后看正式日涨跌。
           </p>
         )}
 
@@ -134,7 +145,7 @@ export default function Dashboard() {
             icon={Wallet}
             tone={estTone}
           />
-          {live?.funds.map((f) => {
+          {live?.funds.filter((f) => f.has_estimate).map((f) => {
             const pnl = f.estimated_pnl ?? 0;
             const ret = f.change_pct ?? 0;
             const isUp = pnl >= 0;
@@ -148,13 +159,9 @@ export default function Dashboard() {
                     ¥{signed(pnl)}
                   </div>
                   <div className={cn("text-sm tabular-nums", isUp ? "text-buy" : "text-sell")}>
-                    {f.has_estimate ? (
-                      <>{ret >= 0 ? "+" : ""}{(ret * 100).toFixed(2)}% {f.note && <span className="text-muted-foreground ml-1">({f.note})</span>}</>
-                    ) : (
-                      <span className="text-muted-foreground">暂无估算</span>
-                    )}
+                    <>{ret >= 0 ? "+" : ""}{(ret * 100).toFixed(2)}% {f.note && <span className="text-muted-foreground ml-1">({f.note})</span>}</>
                   </div>
-                  {f.has_estimate && f.estimated_nav && (
+                  {f.estimated_nav && (
                     <div className="text-xs text-muted-foreground tabular-nums">
                       估 {f.estimated_nav.toFixed(4)} · 市值 ¥{fmt(f.estimated_value)}
                     </div>
