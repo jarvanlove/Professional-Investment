@@ -65,6 +65,7 @@ def portfolio_live(db: Session = Depends(get_db)):
     for code in held_codes:
         qty = float(shares.get(code, 0.0))
         est = estimates.get(code)
+        added = False
         if est:
             live_value = qty * est["nav"]
             # 估算盈亏 = (估算净值 - 昨收净值) * 份额
@@ -84,6 +85,7 @@ def portfolio_live(db: Session = Depends(get_db)):
             })
             if est.get("time") and (as_of is None or est["time"] > as_of):
                 as_of = est["time"]
+            added = True
         elif code == "027521":
             # 广发联接的代理 ETF 589210 有实时价格，可近似估算联接基金
             etf = fetch_etf_live_price("589210")
@@ -109,17 +111,18 @@ def portfolio_live(db: Session = Depends(get_db)):
                     })
                     if etf.get("time") and (as_of is None or etf["time"] > as_of):
                         as_of = etf["time"]
-                    continue
-        funds.append({
-            "code": code,
-            "name": FUNDS[code].name,
-            "estimated_nav": None,
-            "change_pct": None,
-            "estimated_value": snap["holdings"].get(code, 0.0),
-            "estimated_pnl": None,
-            "time": None,
-            "has_estimate": False,
-        })
+                    added = True
+        if not added:
+            funds.append({
+                "code": code,
+                "name": FUNDS[code].name,
+                "estimated_nav": None,
+                "change_pct": None,
+                "estimated_value": round(snap["holdings"].get(code, 0.0), 2),
+                "estimated_pnl": None,
+                "time": None,
+                "has_estimate": False,
+            })
 
     return {
         "as_of": as_of,
