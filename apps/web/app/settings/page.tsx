@@ -7,7 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Copy, Check, Loader2, Sparkles } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Loader2, Settings as SettingsIcon } from "lucide-react";
+import { PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
 
 interface Provider {
@@ -187,13 +188,11 @@ export default function SettingsPage() {
 
   return (
     <main className="p-8 space-y-6">
-      <div className="flex items-center gap-3">
-        <Sparkles className="size-5 text-primary" />
-        <div>
-          <h1 className="text-xl font-bold text-foreground">设置</h1>
-          <p className="text-sm text-muted-foreground">配置 LLM 供应商与模型，用于 AI 信号解读。</p>
-        </div>
-      </div>
+      <PageHeader
+        icon={SettingsIcon}
+        title="设置"
+        description="配置 LLM 供应商与模型，用于 AI 信号解读。"
+      />
 
       <form onSubmit={save}>
         <div className="grid lg:grid-cols-12 gap-6 items-start">

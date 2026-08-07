@@ -11,8 +11,8 @@ export function WeightChart({ data }: { data: WeightPoint[] }) {
         <YAxis tickFormatter={(v) => `${v}%`} fontSize={12} />
         <Tooltip formatter={(v) => `${Number(v).toFixed(1)}%`} />
         <Legend />
-        <Bar dataKey="current" name="当前权重" fill="#2563eb" />
-        <Bar dataKey="target" name="目标权重" fill="#93c5fd" />
+        <Bar dataKey="current" name="当前权重" fill="var(--primary)" radius={[3, 3, 0, 0]} />
+        <Bar dataKey="target" name="目标权重" fill="var(--copper)" radius={[3, 3, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );

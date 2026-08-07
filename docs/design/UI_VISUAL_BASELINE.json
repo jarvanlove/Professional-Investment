@@ -1,16 +1,26 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-06T18:45:00+08:00",
+  "updated_at": "2026-08-07T09:50:03+08:00",
   "registry_schema_version": 1,
   "direction": {
     "id": "prussian-copper",
     "source_number": 1,
     "name": "深海铜",
-    "primary": {"name": "普鲁士蓝", "hex": "#0B3868"},
-    "accent": {"name": "浮光", "hex": "#B89076"},
-    "pair_contrast": 4.10,
+    "primary": {
+      "name": "普鲁士蓝",
+      "hex": "#0B3868"
+    },
+    "accent": {
+      "name": "浮光",
+      "hex": "#B89076"
+    },
+    "pair_contrast": 4.1,
     "tier": "default",
-    "tags": ["金融", "专业服务", "管理后台"],
+    "tags": [
+      "金融",
+      "专业服务",
+      "管理后台"
+    ],
     "notes": "浮光只作强调或大字；不可作为浅底小文字。"
   },
   "shared_tokens": {
@@ -20,17 +30,5 @@
     "text_secondary": "#52616B",
     "border_subtle": "#D8E0E8",
     "focus_ring": "#1660AB"
-  },
-  "project_tokens": {
-    "surface_subtle": "#F1F5F9",
-    "action_hover": "#0A2E56",
-    "accent_subtle": "#F5F0EB",
-    "success": "#166534",
-    "success_surface": "#F0FDF4",
-    "error": "#991B1B",
-    "error_surface": "#FEF2F2",
-    "warning": "#92400E",
-    "warning_surface": "#FFFBEB"
-  },
-  "selection_note": "用户认可方案A布局 + 稳重专业视觉方向，适合投资/金融场景"
+  }
 }

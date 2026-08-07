@@ -3,18 +3,28 @@ import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Trade } from "@/lib/types";
 import { REASON_LABELS } from "@/lib/types";
+import { PageHeader } from "@/components/page-header";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Receipt } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const FUNDS: [string, string][] = [
   ["001480", "财通成长优选混合A"], ["025343", "长盛上证科创板芯片指数C"],
   ["027521", "广发科创芯片设计ETF联接C"], ["005052", "摩根标普港股通低波红利指数C"],
 ];
 const DIRECTION_LABELS: Record<string, string> = { buy: "买入", sell: "卖出", deposit: "入金", withdraw: "出金" };
+const DIRECTION_STYLE: Record<string, string> = {
+  buy: "bg-buy text-buy-foreground",
+  sell: "bg-sell text-sell-foreground",
+  deposit: "bg-primary text-primary-foreground",
+  withdraw: "bg-muted text-muted-foreground",
+};
 
 const empty = {
   date: new Date().toISOString().slice(0, 10), direction: "buy", fund_code: "001480",
@@ -53,7 +63,7 @@ export default function TradesPage() {
 
   return (
     <main className="p-8 space-y-6">
-      <h1 className="text-xl font-bold">交易日志</h1>
+      <PageHeader icon={Receipt} title="交易日志" description="录入实际成交，系统据此推算持仓与赎回费窗口。" />
       <Card>
         <CardHeader><CardTitle className="text-base">录入</CardTitle></CardHeader>
         <CardContent>
@@ -67,7 +77,9 @@ export default function TradesPage() {
               <Label>方向</Label>
               <Select value={form.direction}
                 onValueChange={(v) => setForm({ ...form, direction: v as string })}>
-                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="w-full">
+                  <SelectValue>{(v: string) => DIRECTION_LABELS[v] ?? v}</SelectValue>
+                </SelectTrigger>
                 <SelectContent>
                   {Object.entries(DIRECTION_LABELS).map(([v, l]) =>
                     <SelectItem key={v} value={v}>{l}</SelectItem>)}
@@ -79,7 +91,9 @@ export default function TradesPage() {
                 <Label>基金</Label>
                 <Select value={form.fund_code}
                   onValueChange={(v) => setForm({ ...form, fund_code: v as string })}>
-                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>{(v: string) => FUNDS.find(([c]) => c === v)?.[1] ?? v}</SelectValue>
+                  </SelectTrigger>
                   <SelectContent>
                     {FUNDS.map(([c, n]) => <SelectItem key={c} value={c}>{n}</SelectItem>)}
                   </SelectContent>
@@ -99,7 +113,9 @@ export default function TradesPage() {
                 <Label>理由代码</Label>
                 <Select value={form.reason_code}
                   onValueChange={(v) => setForm({ ...form, reason_code: v as string })}>
-                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectTrigger className="w-full">
+                    <SelectValue>{(v: string) => `${v} ${REASON_LABELS[v] ?? ""}`}</SelectValue>
+                  </SelectTrigger>
                   <SelectContent>
                     {Object.entries(REASON_LABELS).filter(([c]) => c !== "N0").map(([c, l]) =>
                       <SelectItem key={c} value={c}>{c} {l}</SelectItem>)}
@@ -134,21 +150,30 @@ export default function TradesPage() {
           <Table>
             <TableHeader>
               <TableRow>
-                {["日期", "方向", "基金", "金额", "份额", "净值", "理由", "费用", "备注"].map((h) =>
-                  <TableHead key={h}>{h}</TableHead>)}
+                <TableHead>日期</TableHead><TableHead>方向</TableHead><TableHead>基金</TableHead>
+                <TableHead className="text-right">金额</TableHead>
+                <TableHead className="text-right">份额</TableHead>
+                <TableHead className="text-right">净值</TableHead>
+                <TableHead>理由</TableHead>
+                <TableHead className="text-right">费用</TableHead>
+                <TableHead>备注</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {trades.map((t) => (
                 <TableRow key={t.id}>
-                  <TableCell>{t.date}</TableCell>
-                  <TableCell>{DIRECTION_LABELS[t.direction]}</TableCell>
+                  <TableCell className="tabular-nums">{t.date}</TableCell>
+                  <TableCell>
+                    <Badge className={cn("tabular-nums", DIRECTION_STYLE[t.direction])}>
+                      {DIRECTION_LABELS[t.direction]}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{t.fund_code ?? "—"}</TableCell>
-                  <TableCell>{t.amount.toLocaleString("zh-CN")}</TableCell>
-                  <TableCell>{t.shares ?? "—"}</TableCell>
-                  <TableCell>{t.nav ?? "—"}</TableCell>
+                  <TableCell className="text-right tabular-nums font-medium">{t.amount.toLocaleString("zh-CN")}</TableCell>
+                  <TableCell className="text-right tabular-nums">{t.shares ?? "—"}</TableCell>
+                  <TableCell className="text-right tabular-nums">{t.nav ?? "—"}</TableCell>
                   <TableCell>{t.reason_code ?? "—"}</TableCell>
-                  <TableCell>{t.fee_estimate ?? "—"}</TableCell>
+                  <TableCell className="text-right tabular-nums">{t.fee_estimate ?? "—"}</TableCell>
                   <TableCell>{t.note ?? "—"}</TableCell>
                 </TableRow>
               ))}

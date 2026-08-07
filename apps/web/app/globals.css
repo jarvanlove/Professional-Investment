@@ -11,6 +11,11 @@
   --color-surface-subtle: var(--surface-subtle);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
+  --color-buy: var(--buy);
+  --color-buy-foreground: var(--buy-foreground);
+  --color-sell: var(--sell);
+  --color-sell-foreground: var(--sell-foreground);
+  --color-copper: var(--copper);
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
@@ -77,6 +82,11 @@
   --surface-subtle: #F1F5F9;
   --success: #166534;
   --success-foreground: #FFFFFF;
+  --buy: #B91C1C;
+  --buy-foreground: #FFFFFF;
+  --sell: #15803D;
+  --sell-foreground: #FFFFFF;
+  --copper: #B89076;
   --chart-1: #0B3868;
   --chart-2: #1660AB;
   --chart-3: #B89076;
@@ -116,6 +126,11 @@
   --surface-subtle: #0F172A;
   --success: #22C55E;
   --success-foreground: #0F172A;
+  --buy: #EF4444;
+  --buy-foreground: #FFFFFF;
+  --sell: #22C55E;
+  --sell-foreground: #0F172A;
+  --copper: #B89076;
   --chart-1: #4A90D9;
   --chart-2: #60A5FA;
   --chart-3: #B89076;

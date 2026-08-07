@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { AppShell } from "@/components/app-shell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -24,14 +25,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
-        <nav className="flex gap-4 px-8 py-3 border-b text-sm">
-          <a href="/">仪表盘</a>
-          <a href="/signals">每周信号</a>
-          <a href="/trades">交易日志</a>
-          <a href="/portfolio">持仓与资金</a>
-          <a href="/settings">设置</a>
-        </nav>
-        {children}
+        <AppShell>{children}</AppShell>
       </body>
     </html>
   );
