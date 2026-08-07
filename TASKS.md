@@ -18,6 +18,7 @@
 ## Done
 
 - 2026-08-05: Initialized project-level AI control files.
+- 2026-08-07: 设置页拆分为“模型配置/量化参数配置”标签页，修复嵌套表单 hydration 报错；UI 任务 `settings-tabs-20260807` 关闭。
 
 ## When To Update This File
 
