@@ -1,3 +1,14 @@
+export interface DcaPlan {
+  id?: number;
+  fund_code: string;
+  frequency: "weekly" | "monthly";
+  amount: number;
+  day_of_week?: number | null;
+  day_of_month?: number | null;
+  active: boolean;
+  note?: string | null;
+}
+
 export interface FundDecision {
   code: string;
   name: string;
@@ -16,6 +27,14 @@ export interface FundDecision {
   units: number;
   gates: Record<string, boolean>;
   notes: string[];
+  confidence?: number;
+  confidence_level?: "high" | "medium" | "low";
+  est_fee?: number;
+  net_amount?: number;
+  avg_fee_rate?: number;
+  is_dca?: boolean;
+  dca_upcoming?: number;
+  base_weight?: number;
 }
 
 export interface SignalReport {
@@ -29,6 +48,53 @@ export interface SignalReport {
   decisions: FundDecision[];
   weekly_unit_budget: number;
   account_actions: string[];
+  weekly_plan?: WeeklyPlan;
+}
+
+export interface WeeklyPlan {
+  planned_buys: PlannedBuy[];
+  planned_sells: PlannedSell[];
+  total_buy: number;
+  total_sell: number;
+  total_est_fee: number;
+  total_net_proceeds: number;
+  net_cash_change: number;
+  dca_schedule: DcaScheduleItem[];
+  dca_total: number;
+  cash_after: number;
+  cash_after_ok: boolean;
+  min_cash: number;
+  unit_budget_used: number;
+  unit_budget_total: number;
+  post_trade_weights: Record<string, number>;
+  checklist: string[];
+}
+
+export interface PlannedBuy {
+  code: string;
+  name: string;
+  amount: number;
+  reason_code: string;
+  units: number;
+  confidence_level?: string;
+  dca_upcoming?: number;
+}
+
+export interface PlannedSell {
+  code: string;
+  name: string;
+  amount: number;
+  reason_code: string;
+  est_fee?: number;
+  net_amount?: number;
+  avg_fee_rate?: number;
+  confidence_level?: string;
+}
+
+export interface DcaScheduleItem {
+  fund_code: string;
+  date: string;
+  amount: number;
 }
 
 export interface Lot {

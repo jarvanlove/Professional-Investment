@@ -1,4 +1,4 @@
-import type { Portfolio, SignalReport, Trade } from "./types";
+import type { DcaPlan, Portfolio, SignalReport, Trade } from "./types";
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`/api${path}`, { cache: "no-store", ...init });
@@ -48,6 +48,12 @@ export interface Settings {
   minimax_api_key: string;
   qwen_api_key: string;
   glm_api_key: string;
+  strategy_base_weights: string;
+  strategy_max_sell_ratio: string;
+  strategy_max_buy_ratio: string;
+  strategy_buffer_pp: string;
+  strategy_fee_aversion: string;
+  strategy_confidence_scaling: string;
 }
 
 export interface TradePage {
@@ -100,6 +106,21 @@ export const api = {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(s),
     }),
+  dcaPlans: () => req<DcaPlan[]>("/dca-plans"),
+  createDcaPlan: (p: Omit<DcaPlan, "id">) =>
+    req<DcaPlan>("/dca-plans", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(p),
+    }),
+  updateDcaPlan: (id: number, p: Omit<DcaPlan, "id">) =>
+    req<DcaPlan>(`/dca-plans/${id}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(p),
+    }),
+  deleteDcaPlan: (id: number) =>
+    req<{ ok: boolean }>(`/dca-plans/${id}`, { method: "DELETE" }),
   models: (base_url: string, api_key: string) =>
     req<ModelsResult>("/settings/models-preview", {
       method: "POST",

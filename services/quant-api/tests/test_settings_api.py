@@ -45,6 +45,12 @@ def test_defaults_when_empty(client, monkeypatch):
         "llm_model": "deepseek-v4-pro", "llm_provider": "deepseek",
         "deepseek_api_key": "", "kimi_api_key": "", "minimax_api_key": "",
         "qwen_api_key": "", "glm_api_key": "",
+        "strategy_base_weights": '{"001480":0.08,"025343":0.04,"027521":0.0,"005052":0.10}',
+        "strategy_max_sell_ratio": "0.30",
+        "strategy_max_buy_ratio": "1.00",
+        "strategy_buffer_pp": "0.02",
+        "strategy_fee_aversion": "0.005",
+        "strategy_confidence_scaling": "1",
     }
 
 

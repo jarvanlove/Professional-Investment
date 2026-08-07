@@ -41,3 +41,31 @@ class TradePage(BaseModel):
     total: int
     page: int
     page_size: int
+
+
+class DcaPlanIn(BaseModel):
+    fund_code: str
+    frequency: Literal["weekly", "monthly"]
+    amount: float = Field(gt=0)
+    day_of_week: int | None = Field(default=None, ge=0, le=4)
+    day_of_month: int | None = Field(default=None, ge=1, le=28)
+    active: bool = True
+    note: str | None = None
+
+    @model_validator(mode="after")
+    def check_schedule(self):
+        if self.frequency == "weekly" and self.day_of_week is None:
+            raise ValueError("周定投必须指定 day_of_week（0-4）")
+        if self.frequency == "monthly" and self.day_of_month is None:
+            raise ValueError("月定投必须指定 day_of_month（1-28）")
+        if self.frequency == "weekly" and self.day_of_month is not None:
+            raise ValueError("周定投不应指定 day_of_month")
+        if self.frequency == "monthly" and self.day_of_week is not None:
+            raise ValueError("月定投不应指定 day_of_week")
+        return self
+
+
+class DcaPlanOut(DcaPlanIn):
+    id: int
+
+    model_config = {"from_attributes": True}

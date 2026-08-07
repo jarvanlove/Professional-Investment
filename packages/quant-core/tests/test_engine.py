@@ -43,6 +43,7 @@ def test_build_decisions_example_a():
     holdings = {"001480": 2107.85, "025343": 949.85, "027521": 495.12, "005052": 491.25}
     decisions = build_decisions(
         "neutral", scores, vols, navs, holdings, make_account(), capital_plan="15k",
+        confidence_scaling=False,
     )
     by_code = {d.code: d for d in decisions}
     # 目标权重与目标金额（PDF 算例 A 表格）
@@ -79,11 +80,12 @@ def test_sell_to_core_bypasses_weekly_buffer():
     holdings = {"001480": 6000.0, "025343": 3000.0, "027521": 1000.0, "005052": 5000.0}
     account = AccountState(total_value=24000.0, cash_value=9000.0, peak_value=24000.0,
                            net_contributed=24000.0, peak_profit_rate=0.0)
-    decisions = build_decisions("neutral", scores, vols, navs, holdings, account)
+    decisions = build_decisions("neutral", scores, vols, navs, holdings, account,
+                                confidence_scaling=False)
     ct = {d.code: d for d in decisions}["001480"]
     assert ct.action == "SELL"
-    # 目标 6.25%×24000=1500；硬风控卖到目标：4500（不受 25% 缓冲）
-    assert ct.amount == pytest.approx(4500.0)
+    # 默认底仓 8%（1920 元），硬风控卖到目标/核心仓取低者后受底仓保护：6000-1920=4080
+    assert ct.amount == pytest.approx(4080.0)
     assert ct.reason_code == "S2"
 
 

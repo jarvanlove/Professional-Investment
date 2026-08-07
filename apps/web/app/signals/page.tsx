@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { InterpretResult, NavRow } from "@/lib/api";
-import type { SignalReport } from "@/lib/types";
+import type { SignalReport, WeeklyPlan } from "@/lib/types";
 import { REGIME_LABELS } from "@/lib/types";
 import { DecisionCard } from "@/components/DecisionCard";
 import { PageHeader } from "@/components/page-header";
@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { TrendingUp, ChevronRight, Loader2, Upload } from "lucide-react";
+import { TrendingUp, ChevronRight, Loader2, Upload, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STEPS = ["更新净值", "计算信号", "按建议到场外平台下单", "回来补录交易日志"];
@@ -26,11 +26,105 @@ const IMPORT_OPTIONS: [string, string][] = [
 ];
 
 const REGIME_TONE: Record<string, string> = {
-  attack: "border-buy/30 bg-buy/5 text-buy",
+  offensive: "border-buy/30 bg-buy/5 text-buy",
   neutral: "border-primary/30 bg-primary/5 text-primary",
   protect: "border-amber-500/30 bg-amber-500/10 text-amber-700",
-  defense: "border-sell/30 bg-sell/8 text-sell",
+  defensive: "border-sell/30 bg-sell/8 text-sell",
 };
+
+function WeeklyPlanCard({ plan }: { plan: WeeklyPlan }) {
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-base">本周交易方案</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-sm">
+        <div className="grid md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <div className="font-medium">买入（{plan.planned_buys.length} 笔）</div>
+            {plan.planned_buys.length === 0 && <div className="text-xs text-muted-foreground">无</div>}
+            {plan.planned_buys.map((b) => (
+              <div key={b.code} className="flex items-center justify-between rounded border px-2 py-1.5">
+                <span className="text-xs">{b.name}</span>
+                <span className="text-xs font-medium tabular-nums">¥{b.amount.toLocaleString("zh-CN")}</span>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-2">
+            <div className="font-medium">卖出（{plan.planned_sells.length} 笔）</div>
+            {plan.planned_sells.length === 0 && <div className="text-xs text-muted-foreground">无</div>}
+            {plan.planned_sells.map((s) => (
+              <div key={s.code} className="flex items-center justify-between rounded border px-2 py-1.5">
+                <span className="text-xs">{s.name}</span>
+                <div className="text-right">
+                  <div className="text-xs font-medium tabular-nums">¥{s.amount.toLocaleString("zh-CN")}</div>
+                  {s.est_fee != null && s.est_fee > 0 && (
+                    <div className="text-[10px] text-muted-foreground">费 ¥{s.est_fee.toFixed(2)} · 实收 ¥{(s.net_amount ?? s.amount).toFixed(2)}</div>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div className="rounded-lg border p-2.5">
+            <div className="text-muted-foreground">预计买入</div>
+            <div className="text-base font-semibold tabular-nums">¥{plan.total_buy.toLocaleString("zh-CN")}</div>
+          </div>
+          <div className="rounded-lg border p-2.5">
+            <div className="text-muted-foreground">预计卖出</div>
+            <div className="text-base font-semibold tabular-nums">¥{plan.total_sell.toLocaleString("zh-CN")}</div>
+          </div>
+          <div className="rounded-lg border p-2.5">
+            <div className="text-muted-foreground">赎回费</div>
+            <div className="text-base font-semibold tabular-nums text-sell">¥{plan.total_est_fee.toFixed(2)}</div>
+          </div>
+          <div className="rounded-lg border p-2.5">
+            <div className="text-muted-foreground">净现金流</div>
+            <div className={cn("text-base font-semibold tabular-nums", plan.net_cash_change >= 0 ? "text-buy" : "text-sell")}>
+              ¥{plan.net_cash_change.toLocaleString("zh-CN")}
+            </div>
+          </div>
+        </div>
+
+        {plan.dca_schedule.length > 0 && (
+          <div className="space-y-1">
+            <div className="font-medium">定投安排（{plan.dca_schedule.length} 笔 · 合计 ¥{plan.dca_total}）</div>
+            <div className="flex flex-wrap gap-2">
+              {plan.dca_schedule.map((s, i) => (
+                <Badge key={i} variant="outline" className="text-xs">
+                  {s.fund_code} {s.date} ¥{s.amount}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="flex items-center justify-between rounded-lg border p-2.5">
+          <div className="text-xs">
+            <div className="text-muted-foreground">执行后现金</div>
+            <div className="font-medium tabular-nums">¥{plan.cash_after.toLocaleString("zh-CN")}（下限 ¥{plan.min_cash.toLocaleString("zh-CN")}）</div>
+          </div>
+          {plan.cash_after_ok ? (
+            <CheckCircle2 className="size-5 text-sell" />
+          ) : (
+            <AlertCircle className="size-5 text-buy" />
+          )}
+        </div>
+
+        <div className="space-y-1">
+          <div className="font-medium">执行清单</div>
+          <ul className="list-disc pl-4 space-y-0.5 text-xs text-muted-foreground">
+            {plan.checklist.map((item, i) => (
+              <li key={i} className={cn(item.startsWith("⚠️") && "text-buy font-medium")}>{item}</li>
+            ))}
+          </ul>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function SignalsPage() {
   const [report, setReport] = useState<SignalReport | null>(null);
@@ -50,7 +144,6 @@ export default function SignalsPage() {
 
   useEffect(() => {
     if (failedCodes.length > 0 && failedCodes.includes(importCode)) {
-      // keep current if it's one of the failed ones
       return;
     }
     if (failedCodes.length > 0) {
@@ -224,6 +317,9 @@ export default function SignalsPage() {
               <span className="text-xs opacity-80">成交净值以确认日为准（未知价原则）</span>
             </CardContent>
           </Card>
+
+          {report.weekly_plan && <WeeklyPlanCard plan={report.weekly_plan} />}
+
           <div className="grid md:grid-cols-2 gap-4">
             {report.decisions.map((d) => <DecisionCard key={d.code} d={d} />)}
           </div>

@@ -42,7 +42,9 @@ def test_example_a_first_weekly_check():
                            peak_value=total / 0.98, net_contributed=total,
                            peak_profit_rate=0.011)
     decisions = {d.code: d for d in build_decisions(
-        "neutral", scores, vols, navs, holdings, account, capital_plan="15k")}
+        "neutral", scores, vols, navs, holdings, account, capital_plan="15k",
+        confidence_scaling=False,
+    )}
 
     # 目标权重（PDF 表格）
     assert decisions["001480"].target_weight == pytest.approx(0.1875)
@@ -89,9 +91,10 @@ def test_example_b_trend_break_sell():
     account = AccountState(total_value=total, cash_value=9000.0, peak_value=total,
                            net_contributed=total, peak_profit_rate=0.0)
     d = {x.code: x for x in build_decisions("neutral", scores, vols, navs, holdings,
-                                            account)}["001480"]
+                                            account, confidence_scaling=False)}["001480"]
     assert d.action == "SELL" and d.reason_code == "S2"
-    assert d.amount == pytest.approx(4500.0, abs=1)
+    # 默认底仓 8% 保护后：6000 - 24000×0.08 = 4080
+    assert d.amount == pytest.approx(4080.0, abs=1)
 
 
 def test_example_c_profit_lock():

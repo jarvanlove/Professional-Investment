@@ -2,12 +2,13 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import type { Settings } from "@/lib/api";
+import type { DcaPlan } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, Copy, Check, Loader2, Settings as SettingsIcon } from "lucide-react";
+import { Eye, EyeOff, Copy, Check, Loader2, Settings as SettingsIcon, Trash2 } from "lucide-react";
 import { PageHeader } from "@/components/page-header";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +74,13 @@ const PROVIDERS: Provider[] = [
   },
 ];
 
+const FUNDS = [
+  { code: "001480", name: "财通成长优选混合A" },
+  { code: "025343", name: "长盛上证科创板芯片指数C" },
+  { code: "027521", name: "广发科创芯片设计ETF联接C" },
+  { code: "005052", name: "摩根标普港股通低波红利指数C" },
+];
+
 function defaultsFor(id: string) {
   return PROVIDERS.find((p) => p.id === id)?.defaults ?? PROVIDERS[0].defaults;
 }
@@ -109,6 +117,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
+function parseBaseWeights(raw: string) {
+  try {
+    return JSON.parse(raw) as Record<string, number>;
+  } catch {
+    return {};
+  }
+}
+
 export default function SettingsPage() {
   const [form, setForm] = useState<Settings | null>(null);
   const [message, setMessage] = useState<string | null>(null);
@@ -118,6 +134,13 @@ export default function SettingsPage() {
   const [models, setModels] = useState<{ value: string; label: string }[]>(() => normalizeOptions(PROVIDERS[0].defaults));
   const [loadingModels, setLoadingModels] = useState(false);
 
+  const [plans, setPlans] = useState<DcaPlan[]>([]);
+  const [baseWeights, setBaseWeights] = useState<Record<string, number>>({});
+  const [newPlan, setNewPlan] = useState<Omit<DcaPlan, "id">>({
+    fund_code: "001480", frequency: "weekly", amount: 1000,
+    day_of_week: 4, day_of_month: null, active: true, note: "",
+  });
+
   useEffect(() => {
     api.settings().then((s) => {
       const current = PROVIDERS.find((p) => p.id === s.llm_provider) ?? PROVIDERS[0];
@@ -126,7 +149,9 @@ export default function SettingsPage() {
       }
       setForm(s);
       setModels(normalizeOptions(defaultsFor(s.llm_provider)));
+      setBaseWeights(parseBaseWeights(s.strategy_base_weights));
     }).catch((e) => setError(String(e)));
+    api.dcaPlans().then(setPlans).catch(() => setPlans([]));
   }, []);
 
   function selectProvider(id: string) {
@@ -183,6 +208,40 @@ export default function SettingsPage() {
     }
   }
 
+  function updateBaseWeight(code: string, pct: string) {
+    const val = Math.max(0, Math.min(100, parseFloat(pct) || 0));
+    const next = { ...baseWeights, [code]: val / 100 };
+    setBaseWeights(next);
+    setForm((prev) => prev && { ...prev, strategy_base_weights: JSON.stringify(next) });
+  }
+
+  async function addPlan(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    try {
+      await api.createDcaPlan(newPlan);
+      setPlans(await api.dcaPlans());
+      setNewPlan({ fund_code: "001480", frequency: "weekly", amount: 1000,
+                   day_of_week: 4, day_of_month: null, active: true, note: "" });
+      setMessage("定投计划已添加。");
+    } catch (err) { setError(String(err)); }
+  }
+
+  async function togglePlan(plan: DcaPlan) {
+    if (plan.id == null) return;
+    try {
+      await api.updateDcaPlan(plan.id, { ...plan, active: !plan.active });
+      setPlans(await api.dcaPlans());
+    } catch (err) { setError(String(err)); }
+  }
+
+  async function deletePlan(id: number) {
+    try {
+      await api.deleteDcaPlan(id);
+      setPlans(await api.dcaPlans());
+    } catch (err) { setError(String(err)); }
+  }
+
   if (error && !form) return <main className="p-8 text-red-600">加载失败：{error}</main>;
   if (!form) return <main className="p-8">加载中…</main>;
 
@@ -191,7 +250,7 @@ export default function SettingsPage() {
       <PageHeader
         icon={SettingsIcon}
         title="设置"
-        description="配置 LLM 供应商与模型，用于 AI 信号解读。"
+        description="配置 LLM 供应商、量化策略参数与定投计划。"
       />
 
       <form onSubmit={save}>
@@ -272,16 +331,171 @@ export default function SettingsPage() {
                   点击“获取模型列表”会使用上方 Base URL 和 API Key 实时拉取对应供应商的模型。
                 </p>
               </Section>
+            </CardContent>
+          </Card>
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2 border-t">
-                <div className="min-h-[1.5rem]">
-                  {message && <span className="text-sm text-success">{message}</span>}
-                  {error && <p className="text-sm text-destructive">{error}</p>}
+          <Card className="lg:col-span-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">量化策略参数</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <Section title="底仓权重（%）">
+                <div className="grid grid-cols-2 gap-3">
+                  {FUNDS.map((f) => (
+                    <div key={f.code} className="space-y-1">
+                      <Label className="text-xs text-muted-foreground">{f.name} <span className="font-mono">{f.code}</span></Label>
+                      <Input
+                        type="number"
+                        min={0}
+                        max={100}
+                        step={0.1}
+                        value={((baseWeights[f.code] ?? 0) * 100).toFixed(1)}
+                        onChange={(e) => updateBaseWeight(f.code, e.target.value)}
+                      />
+                    </div>
+                  ))}
                 </div>
-                <Button type="submit" size="default">保存设置</Button>
+                <p className="text-xs text-muted-foreground">底仓是每只基金的最小保留权重，卖出建议不会跌破该底线。</p>
+              </Section>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">单次最大卖出比例</Label>
+                  <Input type="number" min={0.01} max={1} step={0.01}
+                    value={form.strategy_max_sell_ratio}
+                    onChange={(e) => setForm({ ...form, strategy_max_sell_ratio: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">权重缓冲带（pp）</Label>
+                  <Input type="number" min={0} max={0.1} step={0.001}
+                    value={form.strategy_buffer_pp}
+                    onChange={(e) => setForm({ ...form, strategy_buffer_pp: e.target.value })} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">赎回费规避阈值</Label>
+                  <Input type="number" min={0} max={0.05} step={0.001}
+                    value={form.strategy_fee_aversion}
+                    onChange={(e) => setForm({ ...form, strategy_fee_aversion: e.target.value })} />
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-xs text-muted-foreground">置信度缩放</Label>
+                  <Select value={form.strategy_confidence_scaling}
+                    onValueChange={(v) => v != null && setForm({ ...form, strategy_confidence_scaling: v })}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">开启</SelectItem>
+                      <SelectItem value="0">关闭</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </CardContent>
           </Card>
+
+          <Card className="lg:col-span-6">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">定投计划</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              {plans.length > 0 && (
+                <div className="space-y-2">
+                  {plans.map((p) => (
+                    <div key={p.id} className="flex items-center justify-between rounded-lg border p-3">
+                      <div className="text-sm">
+                        <div className="font-medium">{FUNDS.find((f) => f.code === p.fund_code)?.name ?? p.fund_code}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {p.frequency === "weekly" ? `每周${["一","二","三","四","五"][p.day_of_week ?? 0]}` : `每月${p.day_of_month}日`} · ¥{p.amount}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => togglePlan(p)}
+                          className={cn(
+                            "px-2 py-1 rounded text-xs border",
+                            p.active
+                              ? "bg-buy/10 text-buy border-buy/30"
+                              : "bg-muted text-muted-foreground border-border"
+                          )}
+                        >
+                          {p.active ? "启用" : "暂停"}
+                        </button>
+                        <Button type="button" variant="ghost" size="icon-sm"
+                          onClick={() => p.id != null && deletePlan(p.id)}>
+                          <Trash2 className="size-4 text-sell" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <form onSubmit={addPlan} className="space-y-3 border-t pt-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">基金</Label>
+                    <Select value={newPlan.fund_code}
+                      onValueChange={(v) => v != null && setNewPlan({ ...newPlan, fund_code: v })}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        {FUNDS.map((f) => <SelectItem key={f.code} value={f.code}>{f.name}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">频率</Label>
+                    <Select value={newPlan.frequency}
+                      onValueChange={(v) => {
+                        if (v == null) return;
+                        setNewPlan({
+                          ...newPlan, frequency: v,
+                          day_of_week: v === "weekly" ? 4 : null,
+                          day_of_month: v === "monthly" ? 1 : null,
+                        });
+                      }}>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="weekly">每周</SelectItem>
+                        <SelectItem value="monthly">每月</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label className="text-xs">{newPlan.frequency === "weekly" ? "周几（0=周一）" : "日期（1-28）"}</Label>
+                    <Input type="number" min={0} max={newPlan.frequency === "weekly" ? 4 : 28} step={1}
+                      value={newPlan.frequency === "weekly" ? (newPlan.day_of_week ?? 0) : (newPlan.day_of_month ?? 1)}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value, 10) || 0;
+                        setNewPlan({ ...newPlan,
+                          day_of_week: newPlan.frequency === "weekly" ? val : null,
+                          day_of_month: newPlan.frequency === "monthly" ? val : null,
+                        });
+                      }} />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">金额（¥）</Label>
+                    <Input type="number" min={1} step={1}
+                      value={newPlan.amount}
+                      onChange={(e) => setNewPlan({ ...newPlan, amount: parseFloat(e.target.value) || 0 })} />
+                  </div>
+                </div>
+                <Button type="submit" variant="outline" size="sm">添加定投计划</Button>
+              </form>
+            </CardContent>
+          </Card>
+
+          <div className="lg:col-span-12 flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+            <div className="min-h-[1.5rem]">
+              {message && <span className="text-sm text-success">{message}</span>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
+            </div>
+            <Button type="submit" size="default">保存设置</Button>
+          </div>
         </div>
       </form>
     </main>

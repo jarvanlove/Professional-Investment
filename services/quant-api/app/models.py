@@ -1,6 +1,6 @@
 from datetime import date
 
-from sqlalchemy import Float, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, Float, Integer, String, Text, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -55,3 +55,15 @@ class AppSetting(Base):
     __tablename__ = "app_settings"
     key: Mapped[str] = mapped_column(String(32), primary_key=True)
     value: Mapped[str] = mapped_column(Text)
+
+
+class DcaPlan(Base):
+    __tablename__ = "dca_plans"
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    fund_code: Mapped[str] = mapped_column(String(8), index=True)
+    frequency: Mapped[str] = mapped_column(String(10))  # weekly | monthly
+    amount: Mapped[float] = mapped_column(Float)
+    day_of_week: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    day_of_month: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
