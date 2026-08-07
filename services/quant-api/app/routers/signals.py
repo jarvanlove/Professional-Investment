@@ -20,6 +20,17 @@ router = APIRouter(prefix="/api/signals", tags=["signals"])
 MIN_POINTS = 61  # MA60 至少需要 61 个点（60 日收益）
 
 
+def _clean(obj):
+    """将 numpy 标量/布尔递归转换为原生 Python 类型，便于 json.dumps。"""
+    if isinstance(obj, dict):
+        return {k: _clean(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_clean(v) for v in obj]
+    if hasattr(obj, "item"):
+        return obj.item()
+    return obj
+
+
 def _load_series(db: Session, code: str) -> pd.Series:
     rows = (
         db.query(NavHistory)
@@ -99,7 +110,7 @@ def compute(db: Session = Depends(get_db)):
         for d in report.decisions:
             if d.code in note:
                 d.notes.append(note)
-    payload = asdict(report)
+    payload = _clean(asdict(report))
     db.add(WeeklySignal(
         as_of=date.today(), report_json=json.dumps(payload, ensure_ascii=False),
         total_value=account.total_value, net_contributed=account.net_contributed,

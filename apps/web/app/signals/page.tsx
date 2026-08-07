@@ -32,7 +32,21 @@ const REGIME_TONE: Record<string, string> = {
   defensive: "border-sell/30 bg-sell/8 text-sell",
 };
 
-function WeeklyPlanCard({ plan }: { plan: WeeklyPlan }) {
+function WeeklyPlanCard({ plan, onCompute }: { plan: WeeklyPlan | null; onCompute: () => void }) {
+  if (!plan || (!plan.planned_buys?.length && !plan.planned_sells?.length && !plan.dca_schedule?.length && plan.total_buy === 0 && plan.total_sell === 0)) {
+    return (
+      <Card className="border-dashed">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">本周交易方案</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm">
+          <p className="text-muted-foreground">当前信号快照尚未生成本周交易方案，或方案为空。点击「计算信号」后将展示买入/卖出列表、预估赎回费、定投安排与执行清单。</p>
+          <Button size="sm" onClick={onCompute}>计算信号</Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -318,10 +332,21 @@ export default function SignalsPage() {
             </CardContent>
           </Card>
 
-          {report.weekly_plan && <WeeklyPlanCard plan={report.weekly_plan} />}
+          {(!report.weekly_plan || Object.keys(report.weekly_plan).length === 0) && (
+            <Card className="border-amber-200 bg-amber-50">
+              <CardContent className="pt-4 text-sm text-amber-800">
+                当前信号快照是旧版本，未包含交易方案、底仓保护、赎回费估算等专业字段。请点击「计算信号」重新生成。
+              </CardContent>
+            </Card>
+          )}
 
-          <div className="grid md:grid-cols-2 gap-4">
-            {report.decisions.map((d) => <DecisionCard key={d.code} d={d} />)}
+          <WeeklyPlanCard plan={report.weekly_plan ?? null} onCompute={compute} />
+
+          <div className="space-y-2">
+            <div className="text-sm font-semibold">基金决策</div>
+            <div className="grid md:grid-cols-2 gap-4">
+              {report.decisions.map((d) => <DecisionCard key={d.code} d={d} />)}
+            </div>
           </div>
         </>
       ) : (

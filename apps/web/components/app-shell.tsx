@@ -45,7 +45,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-full flex-1">
       {/* 桌面侧边栏 */}
-      <aside className="hidden md:flex w-52 shrink-0 flex-col border-r bg-surface">
+      <aside className="hidden md:flex w-52 shrink-0 flex-col border-r bg-surface sticky top-0 h-screen overflow-y-auto">
         <div className="flex items-center gap-2 px-4 py-4 border-b">
           <Landmark className="size-5 text-primary" />
           <div className="leading-tight">

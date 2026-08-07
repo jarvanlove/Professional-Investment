@@ -1,0 +1,56 @@
+schema_version: 1
+id: signals-redesign-20260807
+title: 修复左侧边栏随页面滚动问题，重设计每周信号页：突出本周交易方案卡片、统一决策卡布局、增加旧快照提示
+ui_level: U1
+stage: verification
+created_at: '2026-08-07T23:47:07+08:00'
+updated_at: '2026-08-07T23:48:13+08:00'
+scope:
+  routes: []
+  states:
+  - default
+  - loading
+  - empty
+  - error
+  viewports:
+  - 1440x900
+  - 390x844
+design_authority:
+  owner: TODO
+  sources: []
+  approved_direction: ''
+visual_direction:
+  id: prussian-copper
+  name: 深海铜
+  tier: default
+  selection: explicit
+  selection_note: ''
+  baseline_change: false
+skill_governance:
+  requested_skill: project-ui-rules
+  automatic_skills:
+  - project-ui-rules
+  - ui-visual-direction-registry
+  - ui-accessibility-check
+  - ui-screenshot-check
+  explicit_skills: []
+constraints:
+  allow_new_dependencies: false
+  baseline_update_requires_approval: true
+approvals:
+  visual_direction: not_required
+  design_rfc: not_required
+  release: pending
+evidence:
+  screenshots:
+  - docs/design/screenshots/signals-desktop-1440x900.png
+  - docs/design/screenshots/signals-mobile-390x844.png
+  visual_qa_report: docs/design/qa/signals-redesign-20260807.md
+  accessibility_reports:
+  - docs/design/qa/signals-redesign-20260807-accessibility.md
+  notes: []
+requirements:
+  requires_ui_contract: true
+  requires_direction_approval: false
+  requires_visual_evidence: true
+  description: Local UI change within the approved design system.
