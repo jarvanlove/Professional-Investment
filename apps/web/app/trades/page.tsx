@@ -145,7 +145,7 @@ export default function TradesPage() {
                 </Select>
               </div>
               <div className="space-y-1">
-                <Label>费用估计</Label>
+                <Label>手续费</Label>
                 <Input value={form.fee_estimate}
                   onChange={(e) => setForm({ ...form, fee_estimate: e.target.value })} />
               </div>
@@ -183,16 +183,18 @@ export default function TradesPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Table>
+          <Table className="table-fixed">
             <TableHeader>
               <TableRow>
-                <TableHead>日期</TableHead><TableHead>方向</TableHead><TableHead>基金</TableHead>
-                <TableHead className="text-right">金额</TableHead>
-                <TableHead className="text-right">份额</TableHead>
-                <TableHead className="text-right">净值</TableHead>
-                <TableHead>理由</TableHead>
-                <TableHead className="text-right">费用</TableHead>
-                <TableHead>备注</TableHead>
+                <TableHead className="w-[100px]">日期</TableHead>
+                <TableHead className="w-[80px]">方向</TableHead>
+                <TableHead className="w-[280px]">基金</TableHead>
+                <TableHead className="w-[100px] text-right">金额</TableHead>
+                <TableHead className="w-[100px] text-right">份额</TableHead>
+                <TableHead className="w-[100px] text-right">净值</TableHead>
+                <TableHead className="w-[140px]">理由</TableHead>
+                <TableHead className="w-[90px] text-right">手续费</TableHead>
+                <TableHead className="w-auto">备注</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
