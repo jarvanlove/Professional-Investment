@@ -36,6 +36,7 @@ export default function SignalsPage() {
   const [report, setReport] = useState<SignalReport | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [failedCodes, setFailedCodes] = useState<string[]>([]);
   const [interp, setInterp] = useState<InterpretResult | null>(null);
   const [interpError, setInterpError] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
@@ -47,13 +48,24 @@ export default function SignalsPage() {
     api.latestSignals().then(setReport).catch(() => setReport(null));
   }, []);
 
+  useEffect(() => {
+    if (failedCodes.length > 0 && failedCodes.includes(importCode)) {
+      // keep current if it's one of the failed ones
+      return;
+    }
+    if (failedCodes.length > 0) {
+      setImportCode(failedCodes[0]);
+    }
+  }, [failedCodes]);
+
   async function refreshNav() {
-    setBusy("nav"); setMessage(null);
+    setBusy("nav"); setMessage(null); setFailedCodes([]);
     try {
       const r = await api.refreshNav();
       const failed = r.results.filter((x) => x.status !== "ok");
+      setFailedCodes(failed.map((x) => x.code));
       setMessage(failed.length
-        ? `部分抓取失败：${failed.map((x) => x.code).join("、")}——可手动导入净值兜底`
+        ? `部分抓取失败：${failed.map((x) => x.code).join("、")}`
         : `净值已更新（${r.results.map((x) => `${x.code}+${x.added}`).join("，")}）`);
     } catch (e) { setMessage(`抓取失败：${e}`); }
     setBusy(null);
@@ -98,6 +110,7 @@ export default function SignalsPage() {
       const r = await api.importNav(importCode, parsed);
       setImportMsg(`已导入 ${r.added} 条净值到 ${importCode}`);
       setImportText("");
+      setFailedCodes((prev) => prev.filter((c) => c !== importCode));
     } catch (e) {
       setImportMsg(`导入失败：${e}`);
     }
@@ -121,13 +134,9 @@ export default function SignalsPage() {
           {busy === "compute" && <Loader2 className="size-4 animate-spin" />}
           {busy === "compute" ? "计算中…" : "2. 计算信号"}
         </Button>
-        <Button onClick={interpret} disabled={busy !== null} variant="outline">
+        <Button onClick={interpret} disabled={busy !== null || !report} variant="outline">
           {busy === "interpret" && <Loader2 className="size-4 animate-spin" />}
           {busy === "interpret" ? "解读中…" : "AI 解读"}
-        </Button>
-        <Button onClick={() => setShowImport((s) => !s)} disabled={busy !== null} variant="outline">
-          <Upload className="size-4 mr-1" />
-          {showImport ? "关闭导入" : "手动导入净值"}
         </Button>
       </div>
 
@@ -189,7 +198,17 @@ export default function SignalsPage() {
         ))}
       </div>
 
-      {message && <p className="text-sm text-amber-700">{message}</p>}
+      {message && (
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm text-amber-700">{message}</p>
+          {failedCodes.length > 0 && (
+            <Button onClick={() => setShowImport(true)} disabled={busy !== null} variant="outline" size="sm">
+              <Upload className="size-4 mr-1" />
+              手动导入净值
+            </Button>
+          )}
+        </div>
+      )}
       {report?.account_actions.map((a, i) => (
         <p key={i} className="text-sm font-medium text-buy border border-buy/30 bg-buy/5 rounded-lg p-2.5">{a}</p>
       ))}
