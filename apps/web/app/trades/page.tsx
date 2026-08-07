@@ -172,10 +172,10 @@ export default function TradesPage() {
           <div className="flex items-center gap-2">
             <span className="text-sm text-muted-foreground">筛选基金：</span>
             <Select value={fundFilter} onValueChange={(v) => { setFundFilter(v ?? ""); setPage(1); }} >
-              <SelectTrigger className="w-[220px]">
+              <SelectTrigger className="w-full sm:w-[300px]">
                 <SelectValue>{(v: string) => v ? FUNDS.find(([c]) => c === v)?.[1] ?? v : "全部基金"}</SelectValue>
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent align="end">
                 <SelectItem value="">全部基金</SelectItem>
                 {FUNDS.map(([c, n]) => <SelectItem key={c} value={c}>{c} {n}</SelectItem>)}
               </SelectContent>
