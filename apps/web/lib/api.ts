@@ -15,6 +15,25 @@ export interface NavRow {
   nav: number;
 }
 
+export interface LiveFund {
+  code: string;
+  name: string;
+  estimated_nav: number | null;
+  change_pct: number | null;
+  estimated_value: number;
+  estimated_pnl: number | null;
+  time: string | null;
+  has_estimate: boolean;
+  note?: string;
+}
+
+export interface PortfolioLive {
+  as_of: string | null;
+  funds: LiveFund[];
+  total_estimated_value: number;
+  total_estimated_pnl: number;
+}
+
 export interface NavImportResult {
   added: number;
 }
@@ -59,6 +78,7 @@ export const api = {
       body: JSON.stringify({ fund_code, rows }),
     }),
   portfolio: () => req<Portfolio>("/portfolio"),
+  portfolioLive: () => req<PortfolioLive>("/portfolio/live"),
   trades: (params?: { fund_code?: string; page?: number; page_size?: number }) => {
     const q = new URLSearchParams();
     if (params?.fund_code) q.set("fund_code", params.fund_code);
