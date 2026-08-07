@@ -12,7 +12,7 @@ export function StatCard({
   value: string;
   sub?: string;
   icon?: React.ComponentType<{ className?: string }>;
-  tone?: "default" | "warning" | "danger";
+  tone?: "default" | "warning" | "danger" | "success";
 }) {
   return (
     <Card
@@ -20,7 +20,8 @@ export function StatCard({
         "border-l-4",
         tone === "default" && "border-l-primary",
         tone === "warning" && "border-l-amber-500",
-        tone === "danger" && "border-l-destructive"
+        tone === "danger" && "border-l-destructive",
+        tone === "success" && "border-l-sell"
       )}
     >
       <CardContent className="flex items-start justify-between gap-3 pt-5">
@@ -30,7 +31,8 @@ export function StatCard({
             className={cn(
               "text-2xl font-bold tabular-nums mt-1",
               tone === "warning" && "text-amber-600",
-              tone === "danger" && "text-destructive"
+              tone === "danger" && "text-destructive",
+              tone === "success" && "text-sell"
             )}
           >
             {value}
@@ -43,7 +45,8 @@ export function StatCard({
               "flex size-9 shrink-0 items-center justify-center rounded-lg",
               tone === "default" && "bg-primary/8 text-primary",
               tone === "warning" && "bg-amber-500/10 text-amber-600",
-              tone === "danger" && "bg-destructive/10 text-destructive"
+              tone === "danger" && "bg-destructive/10 text-destructive",
+              tone === "success" && "bg-sell/10 text-sell"
             )}
           >
             <Icon className="size-4" />

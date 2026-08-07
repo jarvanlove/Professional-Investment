@@ -53,6 +53,26 @@ def latest_navs(db: Session) -> dict[str, tuple[date, float]]:
     return out
 
 
+def nav_changes(db: Session) -> dict[str, tuple[date, float, date, float]]:
+    """返回每只基金最近两个净值点：(最新日期, 最新净值, 上一日日期, 上一日净值)。"""
+    out: dict[str, tuple[date, float, date, float]] = {}
+    codes = [r[0] for r in db.query(NavHistory.fund_code).distinct().all()]
+    for code in codes:
+        rows = (
+            db.query(NavHistory)
+            .filter(NavHistory.fund_code == code)
+            .order_by(NavHistory.date.desc())
+            .limit(2)
+            .all()
+        )
+        if not rows:
+            continue
+        latest = rows[0]
+        prev = rows[1] if len(rows) > 1 else rows[0]
+        out[code] = (latest.date, latest.nav, prev.date, prev.nav)
+    return out
+
+
 def holdings_value(db: Session) -> dict[str, float]:
     shares = shares_by_fund(db)
     navs = latest_navs(db)

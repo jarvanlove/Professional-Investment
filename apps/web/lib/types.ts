@@ -46,6 +46,8 @@ export interface PortfolioFund {
   nav_date: string | null;
   value: number;
   weight: number;
+  daily_return: number;
+  daily_pnl: number;
   lots: Lot[];
 }
 

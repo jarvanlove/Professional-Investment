@@ -9,10 +9,12 @@ import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutDashboard, PiggyBank, TrendingDown, Vault, Percent } from "lucide-react";
+import { LayoutDashboard, PiggyBank, TrendingDown, Vault, Percent, Wallet } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const fmt = (n: number) => n.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+const signed = (n: number) => `${n >= 0 ? "+" : ""}${fmt(n)}`;
 
 export default function Dashboard() {
   const [pf, setPf] = useState<Portfolio | null>(null);
@@ -28,6 +30,9 @@ export default function Dashboard() {
   if (!pf) return <main className="p-8">加载中…</main>;
 
   const a = pf.account;
+  const totalDailyPnl = pf.funds.reduce((sum, f) => sum + (f.daily_pnl ?? 0), 0);
+  const latestNavDate = pf.funds.find((f) => f.nav_date)?.nav_date;
+
   const weights: WeightPoint[] = sig
     ? sig.decisions.map((d) => ({
         name: d.name.slice(0, 4), current: +(d.current_value / sig.total_value * 100).toFixed(1),
@@ -37,6 +42,7 @@ export default function Dashboard() {
 
   const ddTone = a.portfolio_dd >= 0.12 ? "danger" : a.portfolio_dd >= 0.06 ? "warning" : "default";
   const peakTone = a.peak_profit_rate >= 0.12 ? "warning" : "default";
+  const pnlTone = totalDailyPnl > 0 ? "danger" : totalDailyPnl < 0 ? "success" : "default"; // 红涨绿跌
 
   return (
     <main className="p-8 space-y-6">
@@ -51,6 +57,35 @@ export default function Dashboard() {
         <StatCard title="组合回撤" value={pct(a.portfolio_dd)} sub="回撤 ≥6% 停加科技，≥12% 防守" icon={TrendingDown} tone={ddTone} />
         <StatCard title="现金比例" value={pct(a.total_value ? a.cash / a.total_value : 0)} sub={`现金 ¥${fmt(a.cash)}`} icon={Vault} />
         <StatCard title="峰值利润率" value={pct(a.peak_profit_rate)} sub="≥12% 锁定一半浮盈" icon={Percent} tone={peakTone} />
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatCard
+          title="今日盈亏"
+          value={`¥${signed(totalDailyPnl)}`}
+          sub={latestNavDate ? `按 ${latestNavDate} 净值 vs 上一日` : "暂无净值数据"}
+          icon={Wallet}
+          tone={pnlTone}
+        />
+        {pf.funds.map((f) => {
+          const dailyPnl = f.daily_pnl ?? 0;
+          const dailyReturn = f.daily_return ?? 0;
+          const isUp = dailyPnl > 0;
+          return (
+            <Card key={f.code} className="flex flex-col justify-between">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm text-muted-foreground truncate" title={f.name}>{f.name}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-1">
+                <div className={cn("text-2xl font-bold tabular-nums", isUp ? "text-buy" : "text-sell")}>
+                  ¥{signed(dailyPnl)}
+                </div>
+                <div className={cn("text-sm tabular-nums", isUp ? "text-buy" : "text-sell")}>
+                  {dailyReturn >= 0 ? "+" : ""}{(dailyReturn * 100).toFixed(2)}%
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
       <div className="grid lg:grid-cols-2 gap-4 items-start">
         <Card>
@@ -74,6 +109,7 @@ export default function Dashboard() {
                   <TableHead className="text-right">份额</TableHead>
                   <TableHead className="text-right">最新净值</TableHead>
                   <TableHead className="text-right">市值</TableHead>
+                  <TableHead className="text-right">日涨跌</TableHead>
                   <TableHead className="text-right">权重</TableHead>
                 </TableRow>
               </TableHeader>
@@ -87,6 +123,9 @@ export default function Dashboard() {
                     <TableCell className="text-right tabular-nums">{f.shares}</TableCell>
                     <TableCell className="text-right tabular-nums">{f.nav ?? "—"}</TableCell>
                     <TableCell className="text-right tabular-nums font-medium">¥{fmt(f.value)}</TableCell>
+                    <TableCell className={cn("text-right tabular-nums", (f.daily_return ?? 0) > 0 ? "text-buy" : "text-sell")}>
+                      {(f.daily_return ?? 0) >= 0 ? "+" : ""}{((f.daily_return ?? 0) * 100).toFixed(2)}%
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">{pct(f.weight)}</TableCell>
                   </TableRow>
                 ))}

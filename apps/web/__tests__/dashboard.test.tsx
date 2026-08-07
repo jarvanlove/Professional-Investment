@@ -5,7 +5,7 @@ import Dashboard from "../app/page";
 const portfolioPayload = {
   funds: [
     { code: "001480", name: "财通成长优选混合A", shares: 1500, nav: 1.4052,
-      nav_date: "2026-08-04", value: 2107.85, weight: 0.11, lots: [] },
+      nav_date: "2026-08-04", value: 2107.85, weight: 0.11, daily_return: 0.0123, daily_pnl: 25.68, lots: [] },
   ],
   account: { cash: 15000, net_contributed: 18000, holdings: { "001480": 2107.85 },
              total_value: 19044.07, peak_value: 19044.07, portfolio_dd: 0.02,
