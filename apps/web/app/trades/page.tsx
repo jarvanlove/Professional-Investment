@@ -183,18 +183,18 @@ export default function TradesPage() {
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Table className="table-fixed">
+          <Table className="table-fixed w-full">
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">日期</TableHead>
-                <TableHead className="w-[80px]">方向</TableHead>
-                <TableHead className="w-[280px]">基金</TableHead>
-                <TableHead className="w-[100px] text-right">金额</TableHead>
-                <TableHead className="w-[100px] text-right">份额</TableHead>
-                <TableHead className="w-[100px] text-right">净值</TableHead>
-                <TableHead className="w-[140px]">理由</TableHead>
-                <TableHead className="w-[90px] text-right">手续费</TableHead>
-                <TableHead className="w-auto">备注</TableHead>
+                <TableHead className="w-[9%]">日期</TableHead>
+                <TableHead className="w-[7%]">方向</TableHead>
+                <TableHead className="w-[28%]">基金</TableHead>
+                <TableHead className="w-[10%] text-right">金额</TableHead>
+                <TableHead className="w-[10%] text-right">份额</TableHead>
+                <TableHead className="w-[9%] text-right">净值</TableHead>
+                <TableHead className="w-[13%]">理由</TableHead>
+                <TableHead className="w-[7%] text-right">手续费</TableHead>
+                <TableHead className="w-[7%]">备注</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
