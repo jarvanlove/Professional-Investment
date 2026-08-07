@@ -47,6 +47,10 @@ export default function PortfolioPage() {
         description="卖出前先看这里：绿色可免费赎回，红色仍在费用窗口内。"
       />
 
+      <p className="text-sm text-muted-foreground">
+        总资产 ¥{fmt(pf.account.total_value)} · 现金 ¥{fmt(pf.account.cash)} · 净投入 ¥{fmt(pf.account.net_contributed)}
+      </p>
+
       <Card>
         <CardHeader className="pb-2">
           <div className="flex flex-wrap items-center justify-between gap-2">

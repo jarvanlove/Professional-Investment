@@ -137,8 +137,9 @@ export default function Dashboard() {
           </p>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="flex flex-wrap gap-4">
           <StatCard
+            className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]"
             title="今日盈亏（估算）"
             value={`¥${signed(totalEstPnl)}`}
             sub={liveTime ? `按 ${liveTime} 盘中估算` : "暂无盘中估算"}
@@ -150,7 +151,7 @@ export default function Dashboard() {
             const ret = f.change_pct ?? 0;
             const isUp = pnl >= 0;
             return (
-              <Card key={f.code} className="flex flex-col justify-between">
+              <Card key={f.code} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col justify-between">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-sm text-muted-foreground truncate" title={f.name}>{f.name}</CardTitle>
                 </CardHeader>

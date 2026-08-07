@@ -7,12 +7,14 @@ export function StatCard({
   sub,
   icon: Icon,
   tone = "default",
+  className,
 }: {
   title: string;
   value: string;
   sub?: string;
   icon?: React.ComponentType<{ className?: string }>;
   tone?: "default" | "warning" | "danger" | "success";
+  className?: string;
 }) {
   return (
     <Card
@@ -21,7 +23,8 @@ export function StatCard({
         tone === "default" && "border-l-primary",
         tone === "warning" && "border-l-amber-500",
         tone === "danger" && "border-l-destructive",
-        tone === "success" && "border-l-sell"
+        tone === "success" && "border-l-sell",
+        className
       )}
     >
       <CardContent className="flex items-start justify-between gap-3 pt-5">
