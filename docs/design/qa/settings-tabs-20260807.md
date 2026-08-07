@@ -20,6 +20,8 @@
 - 保存按钮分别位于两个标签页底部，文案区分清晰 ✅
 - 定投计划“添加”按钮使用 `type="button"`，不会提交外部表单 ✅
 - 宽屏双栏布局正常，移动端单列布局正常 ✅
+- 左右两卡片高度对齐（`h-full flex flex-col` + `items-stretch`）✅
+- 同列输入框/下拉框宽度一致（SelectTrigger / Input 均 `w-full`）✅
 
 ## P2
 

@@ -288,8 +288,8 @@ export default function SettingsPage() {
       )}
 
       {tab === "model" && (
-        <form onSubmit={saveSettings} className="grid lg:grid-cols-12 gap-6 items-start">
-          <Card className="lg:col-span-5">
+        <form onSubmit={saveSettings} className="grid lg:grid-cols-12 gap-6">
+          <Card className="lg:col-span-5 h-full flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">选择供应商</CardTitle>
             </CardHeader>
@@ -310,11 +310,11 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-7">
+          <Card className="lg:col-span-7 h-full flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">连接配置</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 flex-1">
               <Section title="端点地址">
                 <Input id="url" value={form.llm_base_url}
                   onChange={(e) => setForm({ ...form, llm_base_url: e.target.value })}
@@ -375,12 +375,12 @@ export default function SettingsPage() {
       )}
 
       {tab === "quant" && (
-        <form onSubmit={saveSettings} className="grid lg:grid-cols-12 gap-6 items-start">
-          <Card className="lg:col-span-6">
+        <form onSubmit={saveSettings} className="grid lg:grid-cols-12 gap-6">
+          <Card className="lg:col-span-6 h-full flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">量化策略参数</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-5 flex-1">
               <Section title="底仓权重（%）">
                 <div className="grid grid-cols-2 gap-3">
                   {FUNDS.map((f) => (
@@ -426,7 +426,7 @@ export default function SettingsPage() {
                   <Label className="text-xs text-muted-foreground">置信度缩放</Label>
                   <Select value={form.strategy_confidence_scaling}
                     onValueChange={(v) => v != null && setForm({ ...form, strategy_confidence_scaling: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="1">开启</SelectItem>
                       <SelectItem value="0">关闭</SelectItem>
@@ -437,11 +437,11 @@ export default function SettingsPage() {
             </CardContent>
           </Card>
 
-          <Card className="lg:col-span-6">
+          <Card className="lg:col-span-6 h-full flex flex-col">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">定投计划</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-5">
+            <CardContent className="space-y-5 flex-1">
               {plans.length > 0 && (
                 <div className="space-y-2">
                   {plans.map((p) => (
@@ -481,7 +481,7 @@ export default function SettingsPage() {
                     <Label className="text-xs">基金</Label>
                     <Select value={newPlan.fund_code}
                       onValueChange={(v) => v != null && setNewPlan({ ...newPlan, fund_code: v })}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         {FUNDS.map((f) => <SelectItem key={f.code} value={f.code}>{f.name}</SelectItem>)}
                       </SelectContent>
@@ -498,7 +498,7 @@ export default function SettingsPage() {
                           day_of_month: v === "monthly" ? 1 : null,
                         });
                       }}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
+                      <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="weekly">每周</SelectItem>
                         <SelectItem value="monthly">每月</SelectItem>
@@ -512,20 +512,20 @@ export default function SettingsPage() {
                     {newPlan.frequency === "weekly" ? (
                       <Select value={String(newPlan.day_of_week ?? 0)}
                         onValueChange={(v) => v != null && setNewPlan({ ...newPlan, day_of_week: parseInt(v, 10) })}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {WEEKDAYS.map((d, i) => <SelectItem key={i} value={String(i)}>{d}</SelectItem>)}
                         </SelectContent>
                       </Select>
                     ) : (
-                      <Input type="number" min={1} max={28} step={1}
+                      <Input type="number" min={1} max={28} step={1} className="w-full"
                         value={newPlan.day_of_month ?? 1}
                         onChange={(e) => setNewPlan({ ...newPlan, day_of_month: parseInt(e.target.value, 10) || 1 })} />
                     )}
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">金额（¥）</Label>
-                    <Input type="number" min={1} step={1}
+                    <Input type="number" min={1} step={1} className="w-full"
                       value={newPlan.amount}
                       onChange={(e) => setNewPlan({ ...newPlan, amount: parseFloat(e.target.value) || 0 })} />
                   </div>

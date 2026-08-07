@@ -4,7 +4,7 @@ title: 将设置页拆分为模型配置/量化参数配置两个标签页，修
 ui_level: U1
 stage: verification
 created_at: '2026-08-07T22:32:10+08:00'
-updated_at: '2026-08-07T22:38:57+08:00'
+updated_at: '2026-08-07T22:55:55+08:00'
 scope:
   routes: []
   states:
