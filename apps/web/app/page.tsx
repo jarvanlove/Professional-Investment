@@ -25,6 +25,8 @@ export default function Dashboard() {
   const [refreshing, setRefreshing] = useState(false);
   const [refreshMsg, setRefreshMsg] = useState<string | null>(null);
 
+  const [mode, setMode] = useState<"official" | "estimate">("official");
+
   const loadPortfolio = () =>
     api.portfolio().then(setPf).catch((e) => setError(String(e)));
 
@@ -38,7 +40,7 @@ export default function Dashboard() {
   }, []);
 
   async function refreshNav() {
-    setRefreshing(true); setRefreshMsg(null); setError(null);
+    setRefreshing(true); setMode("official"); setRefreshMsg(null); setError(null);
     try {
       const r = await api.refreshNav();
       await loadPortfolio();
@@ -54,7 +56,7 @@ export default function Dashboard() {
   }
 
   async function refreshLive() {
-    setRefreshing(true); setRefreshMsg(null); setError(null);
+    setRefreshing(true); setMode("estimate"); setRefreshMsg(null); setError(null);
     try {
       await loadLive();
       setRefreshMsg("盘中估算已刷新");
@@ -69,6 +71,7 @@ export default function Dashboard() {
 
   const a = pf.account;
   const latestNavDate = pf.funds.find((f) => f.nav_date)?.nav_date;
+  const isEstimate = mode === "estimate";
 
   const weights: WeightPoint[] = sig
     ? sig.decisions.map((d) => ({
@@ -80,8 +83,10 @@ export default function Dashboard() {
   const ddTone = a.portfolio_dd >= 0.12 ? "danger" : a.portfolio_dd >= 0.06 ? "warning" : "default";
   const peakTone = a.peak_profit_rate >= 0.12 ? "warning" : "default";
 
+  const totalDailyPnl = pf.funds.reduce((sum, f) => sum + (f.daily_pnl ?? 0), 0);
   const totalEstPnl = live?.total_estimated_pnl ?? 0;
-  const estTone = totalEstPnl > 0 ? "danger" : totalEstPnl < 0 ? "success" : "default"; // 红涨绿跌
+  const displayTotalPnl = isEstimate ? totalEstPnl : totalDailyPnl;
+  const pnlTone = displayTotalPnl > 0 ? "danger" : displayTotalPnl < 0 ? "success" : "default"; // 红涨绿跌
   const liveTime = live?.as_of;
   const hasAnyEstimate = live?.funds.some((f) => f.has_estimate) ?? false;
 
@@ -90,7 +95,7 @@ export default function Dashboard() {
       <PageHeader
         icon={LayoutDashboard}
         title="仪表盘"
-        description="账户总览与盘中估算。下方“实时估算”区域交易日白天可刷新。"
+        description="账户总览。下方可切换“官方净值”或“盘中估算”查看今日盈亏。"
       />
       {refreshMsg && <p className="text-sm text-muted-foreground">{refreshMsg}</p>}
 
@@ -102,75 +107,108 @@ export default function Dashboard() {
         <StatCard title="峰值利润率" value={pct(a.peak_profit_rate)} sub="≥12% 锁定一半浮盈" icon={Percent} tone={peakTone} />
       </div>
 
-      {/* 实时估算 */}
+      {/* 今日盈亏 / 盘中估算 */}
       <div className="space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold">实时估算</span>
-            {liveTime && <span className="text-sm text-muted-foreground">数据时间 {liveTime}</span>}
+            <span className="text-lg font-semibold">{isEstimate ? "盘中估算" : "今日盈亏"}</span>
+            <span className="text-sm text-muted-foreground">
+              {isEstimate ? (liveTime ? `数据时间 ${liveTime}` : "暂无估算") : (latestNavDate ? `净值日期 ${latestNavDate}` : "暂无净值")}
+            </span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button onClick={refreshLive} disabled={refreshing} variant="outline" size="sm" title="交易日白天获取盘中估算净值（免费接口，可能有延迟）">
-              {refreshing ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
-              刷新估算
+          <div className="inline-flex items-center rounded-lg border bg-muted p-0.5">
+            <Button
+              onClick={refreshNav}
+              disabled={refreshing}
+              variant={isEstimate ? "ghost" : "secondary"}
+              size="sm"
+              className="rounded-md"
+              title="按晚上公布的正式净值计算今日盈亏"
+            >
+              {refreshing && !isEstimate ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+              官方净值
             </Button>
-            <Button onClick={refreshNav} disabled={refreshing} variant="secondary" size="sm" title="晚上 7–9 点基金公司公布正式净值后使用，更新精确资产">
-              刷新净值
+            <Button
+              onClick={refreshLive}
+              disabled={refreshing}
+              variant={isEstimate ? "secondary" : "ghost"}
+              size="sm"
+              className="rounded-md"
+              title="交易日白天按指数/ETF 走势估算"
+            >
+              {refreshing && isEstimate ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+              盘中估算
             </Button>
           </div>
         </div>
 
-        <p className="text-sm text-muted-foreground">
-          <strong>刷新估算</strong>：交易日白天用，基于指数/ETF 走势估算盘中净值，有偏差。
-          <strong>刷新净值</strong>：晚上正式净值公布后使用，更新精确总资产和持仓。
-        </p>
-
-        {!hasAnyEstimate && (
+        {isEstimate && !hasAnyEstimate && (
           <p className="text-sm text-muted-foreground">
-            当前非交易时间或暂无盘中估算。点击“刷新估算”重试；晚上净值公布后请点“刷新净值”。
+            当前非交易时间或暂无盘中估算。点击“盘中估算”按钮重试。
           </p>
         )}
 
-        {live && live.funds.some((f) => !f.has_estimate) && (
+        {isEstimate && live && live.funds.some((f) => !f.has_estimate) && (
           <p className="text-sm text-muted-foreground">
-            以下基金暂无盘中估算：{live.funds.filter((f) => !f.has_estimate).map((f) => f.name.split(" ")[0]).join("、")}。晚上刷新净值后看正式日涨跌。
+            以下基金暂无盘中估算：{live.funds.filter((f) => !f.has_estimate).map((f) => f.name.split(" ")[0]).join("、")}。
           </p>
         )}
 
         <div className="flex flex-wrap gap-4">
           <StatCard
             className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)]"
-            title="今日盈亏（估算）"
-            value={`¥${signed(totalEstPnl)}`}
-            sub={liveTime ? `按 ${liveTime} 盘中估算` : "暂无盘中估算"}
+            title={isEstimate ? "今日盈亏（估算）" : "今日盈亏"}
+            value={`¥${signed(displayTotalPnl)}`}
+            sub={isEstimate ? (liveTime ? `按 ${liveTime} 盘中估算` : "暂无盘中估算") : (latestNavDate ? `按 ${latestNavDate} 净值 vs 上一日` : "暂无净值数据")}
             icon={Wallet}
-            tone={estTone}
+            tone={pnlTone}
           />
-          {live?.funds.filter((f) => f.has_estimate).map((f) => {
-            const pnl = f.estimated_pnl ?? 0;
-            const ret = f.change_pct ?? 0;
-            const isUp = pnl >= 0;
-            return (
-              <Card key={f.code} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col justify-between">
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm text-muted-foreground truncate" title={f.name}>{f.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-1">
-                  <div className={cn("text-2xl font-bold tabular-nums", isUp ? "text-buy" : "text-sell")}>
-                    ¥{signed(pnl)}
-                  </div>
-                  <div className={cn("text-sm tabular-nums", isUp ? "text-buy" : "text-sell")}>
-                    <>{ret >= 0 ? "+" : ""}{(ret * 100).toFixed(2)}% {f.note && <span className="text-muted-foreground ml-1">({f.note})</span>}</>
-                  </div>
-                  {f.estimated_nav && (
-                    <div className="text-xs text-muted-foreground tabular-nums">
-                      估 {f.estimated_nav.toFixed(4)} · 市值 ¥{fmt(f.estimated_value)}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            );
-          })}
+          {isEstimate
+            ? live?.funds.filter((f) => f.has_estimate).map((f) => {
+                const pnl = f.estimated_pnl ?? 0;
+                const ret = f.change_pct ?? 0;
+                const isUp = pnl >= 0;
+                return (
+                  <Card key={f.code} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col justify-between">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm text-muted-foreground truncate" title={f.name}>{f.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1">
+                      <div className={cn("text-2xl font-bold tabular-nums", isUp ? "text-buy" : "text-sell")}>
+                        ¥{signed(pnl)}
+                      </div>
+                      <div className={cn("text-sm tabular-nums", isUp ? "text-buy" : "text-sell")}>
+                        <>{ret >= 0 ? "+" : ""}{(ret * 100).toFixed(2)}% {f.note && <span className="text-muted-foreground ml-1">({f.note})</span>}</>
+                      </div>
+                      {f.estimated_nav && (
+                        <div className="text-xs text-muted-foreground tabular-nums">
+                          估 {f.estimated_nav.toFixed(4)} · 市值 ¥{fmt(f.estimated_value)}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                );
+              })
+            : pf.funds.map((f) => {
+                const dailyPnl = f.daily_pnl ?? 0;
+                const dailyReturn = f.daily_return ?? 0;
+                const isUp = dailyPnl > 0;
+                return (
+                  <Card key={f.code} className="w-full sm:w-[calc(50%-0.5rem)] lg:w-[calc(25%-0.75rem)] flex flex-col justify-between">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm text-muted-foreground truncate" title={f.name}>{f.name}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-1">
+                      <div className={cn("text-2xl font-bold tabular-nums", isUp ? "text-buy" : "text-sell")}>
+                        ¥{signed(dailyPnl)}
+                      </div>
+                      <div className={cn("text-sm tabular-nums", isUp ? "text-buy" : "text-sell")}>
+                        {dailyReturn >= 0 ? "+" : ""}{(dailyReturn * 100).toFixed(2)}%
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
         </div>
       </div>
 
