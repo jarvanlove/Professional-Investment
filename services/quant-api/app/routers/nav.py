@@ -33,9 +33,12 @@ def _upsert_navs(db: Session, code: str, series: pd.Series, source: str) -> int:
 @router.post("/refresh")
 def refresh(db: Session = Depends(get_db)):
     results = []
-    targets = {c: fetch_fund_nav for c in FUNDS}
-    targets["589210"] = fetch_etf_nav  # 广发联接 C 的信号代理
-    for code, fn in targets.items():
+    codes = set(FUNDS)
+    for f in FUNDS.values():
+        if f.proxy_code:
+            codes.add(f.proxy_code)
+    for code in sorted(codes):
+        fn = fetch_fund_nav if code in FUNDS else fetch_etf_nav
         try:
             added = _upsert_navs(db, code, fn(code), "auto")
             results.append({"code": code, "status": "ok", "added": added})

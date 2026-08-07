@@ -42,7 +42,7 @@ FUNDS: dict[str, FundConfig] = {
         code="027521", name="广发科创芯片设计ETF联接C", bucket="tech", role="satellite",
         cap=0.10, min_score_to_buy=4, core_weight=0.0, vol_bands=_TECH_VOL_BANDS,
         fee_tiers=(FeeTier(7, 0.015), FeeTier(None, 0.0)),
-        proxy_code="589210",
+        proxy_code="025343",
     ),
     "005052": FundConfig(
         code="005052", name="摩根标普港股通低波红利指数C", bucket="dividend", role="defensive",

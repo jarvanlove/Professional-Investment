@@ -16,7 +16,7 @@ def fetch_fund_nav(code: str) -> pd.Series:
 
 
 def fetch_etf_nav(code: str) -> pd.Series:
-    """ETF 日收盘价（供 589210 信号代理），index=date，升序。"""
+    """ETF 日收盘价（备用数据源），index=date，升序。"""
     df = ak.fund_etf_hist_em(symbol=code, period="daily", adjust="")
     s = pd.Series(
         df["收盘"].astype(float).to_numpy(),

@@ -32,7 +32,7 @@ Explicitly not doing unless added to `TASKS.md`:
 - Entry: 每周五净值披露后打开"每周信号页"，点"更新数据"
 - Steps: 抓取净值落库 → quant-core 重算 → 写 weekly_signals 快照 → 展示评分/闸门/建议动作
 - Success: 用户按建议（含 N0 无交易）在下一开放日 15:00 前在场外平台手动下单，并在交易日志录入
-- Failure states: 抓取失败 → stale 横幅 + 手动录入兜底；数据不足（如广发 C <60 交易日）→ 自动用 589210 代理并标注
+- Failure states: 抓取失败 → stale 横幅 + 手动录入兜底；数据不足（如广发 C <60 交易日）→ 自动用 025343 代理并标注
 
 ### Flow 2：交易记录与复盘
 

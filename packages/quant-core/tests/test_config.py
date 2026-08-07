@@ -36,7 +36,7 @@ def test_unit_limits_15k_sum():
 
 
 def test_proxy_only_for_guangfa():
-    assert FUNDS["027521"].proxy_code == "589210"
+    assert FUNDS["027521"].proxy_code == "025343"
     assert all(f.proxy_code is None for c, f in FUNDS.items() if c != "027521")
 
 

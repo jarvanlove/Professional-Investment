@@ -22,7 +22,6 @@ const IMPORT_OPTIONS: [string, string][] = [
   ["025343", "025343 长盛上证科创板芯片指数C"],
   ["027521", "027521 广发科创芯片设计ETF联接C"],
   ["005052", "005052 摩根标普港股通低波红利指数C"],
-  ["589210", "589210 广发科创芯片ETF（027521 信号代理）"],
 ];
 
 const REGIME_TONE: Record<string, string> = {
@@ -148,7 +147,7 @@ export default function SignalsPage() {
   const [interp, setInterp] = useState<InterpretResult | null>(null);
   const [interpError, setInterpError] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
-  const [importCode, setImportCode] = useState<string>("589210");
+  const [importCode, setImportCode] = useState<string>("001480");
   const [importText, setImportText] = useState<string>("");
   const [importMsg, setImportMsg] = useState<string | null>(null);
 
@@ -259,7 +258,7 @@ export default function SignalsPage() {
             <div className="grid gap-3 md:grid-cols-[260px_1fr]">
               <div className="space-y-1">
                 <Label>目标基金</Label>
-                <Select value={importCode} onValueChange={(v) => setImportCode(v ?? "589210")}>
+                <Select value={importCode} onValueChange={(v) => setImportCode(v ?? "001480")}>
                   <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>

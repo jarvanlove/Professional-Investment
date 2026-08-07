@@ -10,7 +10,7 @@ from app.db import get_db
 from app.main import app
 from app.models import Base, NavHistory
 
-CODES = ("001480", "025343", "027521", "005052", "589210")
+CODES = ("001480", "025343", "027521", "005052")
 
 
 @pytest.fixture()

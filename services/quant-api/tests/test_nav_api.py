@@ -59,16 +59,14 @@ def test_stale_flag(client):
 def test_refresh_partial_failure(client, monkeypatch):
     import app.routers.nav as nav_router
 
-    def ok(code):
+    def ok_or_boom(code):
+        if code == "005052":
+            raise RuntimeError("network down")
         return pd.Series({date.today(): 1.5})
 
-    def boom(code):
-        raise RuntimeError("network down")
-
-    monkeypatch.setattr(nav_router, "fetch_fund_nav", ok)
-    monkeypatch.setattr(nav_router, "fetch_etf_nav", boom)
+    monkeypatch.setattr(nav_router, "fetch_fund_nav", ok_or_boom)
     r = client.post("/api/nav/refresh")
     assert r.status_code == 200
     results = {x["code"]: x for x in r.json()["results"]}
     assert results["001480"]["status"] == "ok"
-    assert results["589210"]["status"] == "error"
+    assert results["005052"]["status"] == "error"
