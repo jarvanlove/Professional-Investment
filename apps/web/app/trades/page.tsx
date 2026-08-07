@@ -188,13 +188,13 @@ export default function TradesPage() {
               <TableRow>
                 <TableHead className="w-[9%]">日期</TableHead>
                 <TableHead className="w-[7%]">方向</TableHead>
-                <TableHead className="w-[28%]">基金</TableHead>
-                <TableHead className="w-[10%] text-right">金额</TableHead>
+                <TableHead className="w-[20%]">基金</TableHead>
+                <TableHead className="w-[10%] text-right">金额（¥）</TableHead>
                 <TableHead className="w-[10%] text-right">份额</TableHead>
-                <TableHead className="w-[9%] text-right">净值</TableHead>
-                <TableHead className="w-[13%]">理由</TableHead>
-                <TableHead className="w-[7%] text-right">手续费</TableHead>
-                <TableHead className="w-[7%]">备注</TableHead>
+                <TableHead className="w-[10%] text-right">净值</TableHead>
+                <TableHead className="w-[13%] pl-4">理由</TableHead>
+                <TableHead className="w-[7%] text-right">手续费（¥）</TableHead>
+                <TableHead className="w-[7%] pl-4">备注</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -210,9 +210,9 @@ export default function TradesPage() {
                   <TableCell className="text-right tabular-nums font-medium">{t.amount.toLocaleString("zh-CN")}</TableCell>
                   <TableCell className="text-right tabular-nums">{t.shares ?? "—"}</TableCell>
                   <TableCell className="text-right tabular-nums">{t.nav ?? "—"}</TableCell>
-                  <TableCell>{reasonLabel(t.reason_code)}</TableCell>
+                  <TableCell className="pl-4">{reasonLabel(t.reason_code)}</TableCell>
                   <TableCell className="text-right tabular-nums">{t.fee_estimate ?? "—"}</TableCell>
-                  <TableCell>{t.note ?? "—"}</TableCell>
+                  <TableCell className="pl-4">{t.note ?? "—"}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

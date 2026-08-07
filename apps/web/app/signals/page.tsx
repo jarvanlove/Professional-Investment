@@ -1,18 +1,29 @@
 "use client";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
-import type { InterpretResult } from "@/lib/api";
+import type { InterpretResult, NavRow } from "@/lib/api";
 import type { SignalReport } from "@/lib/types";
 import { REGIME_LABELS } from "@/lib/types";
 import { DecisionCard } from "@/components/DecisionCard";
 import { PageHeader } from "@/components/page-header";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, ChevronRight, Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TrendingUp, ChevronRight, Loader2, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const STEPS = ["更新净值", "计算信号", "按建议到场外平台下单", "回来补录交易日志"];
+
+const IMPORT_OPTIONS: [string, string][] = [
+  ["001480", "001480 财通成长优选混合A"],
+  ["025343", "025343 长盛上证科创板芯片指数C"],
+  ["027521", "027521 广发科创芯片设计ETF联接C"],
+  ["005052", "005052 摩根标普港股通低波红利指数C"],
+  ["589210", "589210 广发科创芯片ETF（027521 信号代理）"],
+];
 
 const REGIME_TONE: Record<string, string> = {
   attack: "border-buy/30 bg-buy/5 text-buy",
@@ -27,6 +38,10 @@ export default function SignalsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [interp, setInterp] = useState<InterpretResult | null>(null);
   const [interpError, setInterpError] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
+  const [importCode, setImportCode] = useState<string>("589210");
+  const [importText, setImportText] = useState<string>("");
+  const [importMsg, setImportMsg] = useState<string | null>(null);
 
   useEffect(() => {
     api.latestSignals().then(setReport).catch(() => setReport(null));
@@ -58,6 +73,37 @@ export default function SignalsPage() {
     setBusy(null);
   }
 
+  function parseNavRows(text: string): NavRow[] | string {
+    const rows: NavRow[] = [];
+    const lines = text.trim().split(/\r?\n/).filter((l) => l.trim());
+    for (const line of lines) {
+      const parts = line.split(/[,，\t]+/);
+      if (parts.length < 2) return `格式错误：${line}`;
+      const date = parts[0].trim();
+      const nav = parseFloat(parts[1].trim());
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return `日期格式错误：${date}`;
+      if (Number.isNaN(nav) || nav <= 0) return `净值无效：${parts[1].trim()}`;
+      rows.push({ date, nav });
+    }
+    return rows;
+  }
+
+  async function submitImport() {
+    setImportMsg(null);
+    const parsed = parseNavRows(importText);
+    if (typeof parsed === "string") { setImportMsg(parsed); return; }
+    if (parsed.length === 0) { setImportMsg("请输入至少一行数据"); return; }
+    setBusy("import");
+    try {
+      const r = await api.importNav(importCode, parsed);
+      setImportMsg(`已导入 ${r.added} 条净值到 ${importCode}`);
+      setImportText("");
+    } catch (e) {
+      setImportMsg(`导入失败：${e}`);
+    }
+    setBusy(null);
+  }
+
   return (
     <main className="p-8 space-y-6">
       <PageHeader
@@ -79,7 +125,57 @@ export default function SignalsPage() {
           {busy === "interpret" && <Loader2 className="size-4 animate-spin" />}
           {busy === "interpret" ? "解读中…" : "AI 解读"}
         </Button>
+        <Button onClick={() => setShowImport((s) => !s)} disabled={busy !== null} variant="outline">
+          <Upload className="size-4 mr-1" />
+          {showImport ? "关闭导入" : "手动导入净值"}
+        </Button>
       </div>
+
+      {showImport && (
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base">手动导入净值</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              当自动抓取失败时，可粘贴基金净值。每行一条，格式：<code className="rounded bg-muted px-1 py-0.5">YYYY-MM-DD, 净值</code>。
+            </p>
+            <div className="grid gap-3 md:grid-cols-[260px_1fr]">
+              <div className="space-y-1">
+                <Label>目标基金</Label>
+                <Select value={importCode} onValueChange={(v) => setImportCode(v ?? "589210")}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {IMPORT_OPTIONS.map(([c, l]) => (
+                      <SelectItem key={c} value={c}>{l}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1">
+                <Label>净值数据</Label>
+                <Textarea
+                  rows={6}
+                  placeholder={`2026-08-01, 1.2345\n2026-08-04, 1.2456`}
+                  value={importText}
+                  onChange={(e) => setImportText(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button onClick={submitImport} disabled={busy !== null}>
+                {busy === "import" && <Loader2 className="size-4 animate-spin" />}
+                确认导入
+              </Button>
+              {importMsg && (
+                <p className={cn("text-sm", importMsg.startsWith("已导入") ? "text-buy" : "text-sell")}>{importMsg}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex flex-wrap items-center gap-1 text-xs">
         {STEPS.map((s, i) => (

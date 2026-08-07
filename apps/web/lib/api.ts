@@ -10,6 +10,15 @@ export interface RefreshResult {
   results: { code: string; status: string; added: number; error?: string }[];
 }
 
+export interface NavRow {
+  date: string;
+  nav: number;
+}
+
+export interface NavImportResult {
+  added: number;
+}
+
 export interface Settings {
   llm_api_key: string;
   llm_base_url: string;
@@ -43,6 +52,12 @@ export const api = {
   latestSignals: () => req<SignalReport>("/signals/latest"),
   computeSignals: () => req<SignalReport>("/signals/compute", { method: "POST" }),
   refreshNav: () => req<RefreshResult>("/nav/refresh", { method: "POST" }),
+  importNav: (fund_code: string, rows: NavRow[]) =>
+    req<NavImportResult>("/nav/import", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ fund_code, rows }),
+    }),
   portfolio: () => req<Portfolio>("/portfolio"),
   trades: (params?: { fund_code?: string; page?: number; page_size?: number }) => {
     const q = new URLSearchParams();
