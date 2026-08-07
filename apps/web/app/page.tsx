@@ -7,9 +7,10 @@ import { StatCard } from "@/components/StatCard";
 import { WeightChart, type WeightPoint } from "@/components/WeightChart";
 import { PageHeader } from "@/components/page-header";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { LayoutDashboard, PiggyBank, TrendingDown, Vault, Percent, Wallet } from "lucide-react";
+import { LayoutDashboard, PiggyBank, TrendingDown, Vault, Percent, Wallet, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const fmt = (n: number) => n.toLocaleString("zh-CN", { maximumFractionDigits: 2 });
@@ -20,11 +21,31 @@ export default function Dashboard() {
   const [pf, setPf] = useState<Portfolio | null>(null);
   const [sig, setSig] = useState<SignalReport | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshMsg, setRefreshMsg] = useState<string | null>(null);
+
+  const loadPortfolio = () =>
+    api.portfolio().then(setPf).catch((e) => setError(String(e)));
 
   useEffect(() => {
-    api.portfolio().then(setPf).catch((e) => setError(String(e)));
+    loadPortfolio();
     api.latestSignals().then(setSig).catch(() => setSig(null)); // 404 容忍
   }, []);
+
+  async function refreshNav() {
+    setRefreshing(true); setRefreshMsg(null); setError(null);
+    try {
+      const r = await api.refreshNav();
+      await loadPortfolio();
+      const failed = r.results.filter((x) => x.status !== "ok");
+      setRefreshMsg(failed.length
+        ? `部分净值抓取失败：${failed.map((x) => x.code).join("、")}`
+        : `净值已更新：${r.results.map((x) => `${x.code}+${x.added}`).join("，")}`);
+    } catch (e) {
+      setError(`刷新失败：${e}`);
+    }
+    setRefreshing(false);
+  }
 
   if (error) return <main className="p-8 text-destructive">加载失败：{error}（quant-api 是否在运行？）</main>;
   if (!pf) return <main className="p-8">加载中…</main>;
@@ -49,9 +70,18 @@ export default function Dashboard() {
       <PageHeader
         icon={LayoutDashboard}
         title="仪表盘"
-        description="账户总览与权重偏离一览。"
-        actions={sig && <Badge>{REGIME_LABELS[sig.regime] ?? sig.regime}模式 · {sig.as_of}</Badge>}
+        description="账户总览与权重偏离一览。每天晚上净值公布后点刷新看当日收益。"
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            {sig && <Badge>{REGIME_LABELS[sig.regime] ?? sig.regime}模式 · {sig.as_of}</Badge>}
+            <Button onClick={refreshNav} disabled={refreshing} variant="outline" size="sm">
+              {refreshing ? <RefreshCw className="size-4 animate-spin" /> : <RefreshCw className="size-4" />}
+              刷新净值
+            </Button>
+          </div>
+        }
       />
+      {refreshMsg && <p className="text-sm text-muted-foreground">{refreshMsg}</p>}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard title="账户总资产" value={`¥${fmt(a.total_value)}`} sub={`净投入 ¥${fmt(a.net_contributed)}`} icon={PiggyBank} />
         <StatCard title="组合回撤" value={pct(a.portfolio_dd)} sub="回撤 ≥6% 停加科技，≥12% 防守" icon={TrendingDown} tone={ddTone} />
